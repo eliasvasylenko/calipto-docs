@@ -45,8 +45,8 @@
 </div>
 <div class="section" id="types">
 <h2>1.2. Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
-<p>The host language, and by extension all client languages, are furnished with a general-purpose type system based on static analysis and type-recovery. This means that types can be <em>expressed as runtime checks</em>, but that those checks are <em>statically enforced</em> by the compiler, and erased so that they place no runtime burden. This means that type-level metaprogramming needs no special syntax and can be expressed directly in the host language, avoiding the language bifurcation which comes with e.g. template metaprogramming in C++ or awkward side-channels to annotate methods with pre and post conditions. We believe that this is the best of both words, static safety with a single unified programming model.</p>
-<p>Out of the box Calipto provides support for advanced features such as dependent and higher-order types, and since they are implemented via macros it is trivial for any language which is bootstrapped from Calipto to supplement or “turn off” these checks wherever they like, or even to substitute their own type systems via entirely different mechanisms.</p>
+<p>The host language, and by extension all client languages, are furnished with a general-purpose type system based on static analysis and type-recovery. This means that types can be <em>expressed as runtime checks</em>, but that those checks are <em>statically enforced</em> by the compiler, and erased so that they place no runtime burden. We believe that this is the best of both words, static safety with a single unified programming model.</p>
+<p>Out of the box Calipto provides static analysis for advanced features such as dependent and higher-order types, and since they are implemented via macros any language which is bootstrapped from Calipto can supplement or “turn off” these checks wherever they like, or even to substitute their own type systems via entirely different mechanisms.</p>
 </div>
 <div class="section" id="effects">
 <h2>1.3. Effects<a class="headerlink" href="#effects" title="Permalink to this headline">¶</a></h2>
