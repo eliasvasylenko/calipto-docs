@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2. Base Language &#8212; Calipto  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="1. Introduction" href="intro.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="base-language">
+<h1>2. Base Language<a class="headerlink" href="#base-language" title="Permalink to this headline">¶</a></h1>
+<p>At its core, Calipto is a very small purely-functional language, with only two primitive data types and a handful of primitive functions. This doesn’t make for a very ergonomic programming experience by itself, but don’t let that scare you off! Most users will never program directly in the core language and will instead use a number of standard language extensions built on the macro system. That said, the base language is still designed to be human readable and comprehensible, and understanding this design can be a solid foundation upon which to learn the rest of the language.</p>
+<div class="section" id="continuation-passing-direct-style">
+<h2>2.1. Continuation-Passing/Direct Style<a class="headerlink" href="#continuation-passing-direct-style" title="Permalink to this headline">¶</a></h2>
+<p>Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it’s a value of a unit type like void), and expressions can be composed by passing arguments to functions. The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control automatically returning to the caller when a function completes, each function explicitly passes along control by calling another function.</p>
+</div>
+<div class="section" id="primitives">
+<h2>2.2. Primitives<a class="headerlink" href="#primitives" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="data">
+<h3>2.2.1. Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
+<p>There are only two fundamental types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
+<p>It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.</p>
+<p>A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with <cite>:</cite>, though in some circumstances the namespace may be inferred from context in which case the <cite>:</cite> should be omitted. Here are some examples of formatted symbols:
+- <cite>system:true</cite>
+- <cite>false</cite>
+- <cite>nil</cite>
+- <cite>product-domain.com:important-thing</cite></p>
+<p>If two symbols share the same name and namespace then they are equal, otherwise they are not. The symbol <cite>system:nil</cite> may also be formatted as <cite>()</cite>.</p>
+<p>A cons cell is an ordered pair of data. Each half may be a symbol or another cons cell. In the Lisp tradition, the left half of the pair is referred to as the car, and the right half is referred to as the cdr. A cons cell is formatted with the car followed by the cdr, separated with <cite>.</cite>, and surrounded by brackets.
+- <cite>(true . false)</cite>
+- <cite>(hello . (world . ()))</cite>
+- <cite>(system:true . system:false)</cite></p>
+<p>If the cdr holds another cons cell, this can be formatted according to a shorthand notation by omitting the dot and the brackets around the cdr. If the cdr is omitted entirely, it is taken to be <cite>system:nil</cite>. Here are some examples:
+- <cite>(first second third)</cite> is equivalent to <cite>(first . (second . (third . ())))</cite>
+- <cite>(single-element)</cite> is equivalent to <cite>(single-element . ())</cite></p>
+<p>This reflects how lists are typically represented in Calipto; the empty list is represented by the <cite>nil</cite> symbol, and any other list is represented with a cons cell whose car holds the first element and whose cdr holds the remainder of the list. If a list has a symbol other than <cite>nil</cite> in the terminal position, it is considered to be “improper”, and in fact any symbol other than <cite>nil</cite> may be thought of as an improper empty list:
+- <cite>(first second)</cite> is equivalent to <cite>(first second . nil)</cite> is equivalent to <cite>(first . (second . ()))</cite>, and is a proper list with two elements.
+- <cite>(first second . terminal)</cite> is equivalent to <cite>(first . (second . terminal))</cite>, and is an improper list with two elements.</p>
+</div>
+<div class="section" id="functions">
+<h3>2.2.2. Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<p>(cons car cdr cont)
+(car cons cont)
+(cdr cons cont)</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Calipto</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Base Language</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#continuation-passing-direct-style">2.1. Continuation-Passing/Direct Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#primitives">2.2. Primitives</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="intro.html" title="previous chapter">1. Introduction</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Elias N Vasylenko.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/base.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

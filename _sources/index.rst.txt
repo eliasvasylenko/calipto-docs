@@ -7,6 +7,7 @@ Welcome to Calipto's documentation!
    :numbered:
 
    intro
+   base
 
 Indices and tables
 ==================
