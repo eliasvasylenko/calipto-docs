@@ -3,25 +3,27 @@ Markup
 
 Most s-expression "markup languages" aren't really markup languages. Markup should mean the annotation of text content with metadata, not the embedding of text content within data.
 
-#(sexup-html)
-(html @(id thing)
-  (h1 This is a Document)
+Here is an example of some html-flavored sexup::
 
-  (p This is a paragraph.)
+  #(sexup-html)
+  (html @(id thing)
+    (h1 This is a Document)
 
-  (p
-    Here is more text.
+    (p This is a paragraph.)
 
-    Here is an inserted $(value).
-    Or maybe \ this / is?
+    (p
+      Here is more text.
 
-    (ul @(attribute $(value))
-      (li Here are -)
-      (li - some -)
-      (li - list items))
+      Here is an inserted $(value).
+      Or maybe \ this / is?
 
-    Here is a (a @(href url) link).)
-  ((p In this paragraph we can use (brackets).))
-  (((p And in this one we can use ((double brackets )).)))
-  (p But not here!))
+      (ul @(attribute $(value))
+        (li Here are ...)
+        (li ... some ...)
+        (li ... list items))
+
+      Here is a (a @(href url) link).)
+    (\p In this paragraph we can use (brackets).\)
+    (\\p And in this one we can use (\brackets and backslashes\).\\)
+    (p But not here!))
 

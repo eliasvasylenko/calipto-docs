@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Markup &#8212; Calipto  documentation</title>
+    <title>3. Markup &#8212; Calipto  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -14,6 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="2. Base Language" href="base.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -31,30 +32,32 @@
           <div class="body" role="main">
             
   <div class="section" id="markup">
-<h1>Markup<a class="headerlink" href="#markup" title="Permalink to this headline">¶</a></h1>
+<h1>3. Markup<a class="headerlink" href="#markup" title="Permalink to this headline">¶</a></h1>
 <p>Most s-expression “markup languages” aren’t really markup languages. Markup should mean the annotation of text content with metadata, not the embedding of text content within data.</p>
-<p>#(sexup-html)
-(html &#64;(id thing)</p>
-<blockquote>
-<div><p>(h1 This is a Document)</p>
-<p>(p This is a paragraph.)</p>
-<dl>
-<dt>(p</dt><dd><p>Here is more text.</p>
-<p>Here is an inserted $(value).
-Or maybe this / is?</p>
-<dl class="simple">
-<dt>(ul &#64;(attribute $(value))</dt><dd><p>(li Here are -)
-(li - some -)
-(li - list items))</p>
-</dd>
-</dl>
-<p>Here is a (a &#64;(href url) link).)</p>
-</dd>
-</dl>
-<p>((p In this paragraph we can use (brackets).))
-(((p And in this one we can use ((double brackets )).)))
-(p But not here!))</p>
-</div></blockquote>
+<p>Here is an example of some html-flavored sexup:</p>
+<div class="highlight-lisp notranslate"><div class="highlight"><pre><span></span><span class="o">#(</span><span class="nv">sexup-html</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">html</span> <span class="nv">@</span><span class="p">(</span><span class="nv">id</span> <span class="nv">thing</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">h1</span> <span class="nv">This</span> <span class="nv">is</span> <span class="nv">a</span> <span class="nv">Document</span><span class="p">)</span>
+
+  <span class="p">(</span><span class="nv">p</span> <span class="nv">This</span> <span class="nv">is</span> <span class="nv">a</span> <span class="nv">paragraph.</span><span class="p">)</span>
+
+  <span class="p">(</span><span class="nv">p</span>
+    <span class="nv">Here</span> <span class="nv">is</span> <span class="nv">more</span> <span class="nv">text.</span>
+
+    <span class="nv">Here</span> <span class="nv">is</span> <span class="nv">an</span> <span class="nv">inserted</span> <span class="nv">$</span><span class="p">(</span><span class="nv">value</span><span class="p">)</span><span class="o">.</span>
+    <span class="nv">Or</span> <span class="nv">maybe</span> <span class="nv">\ this</span> <span class="nb">/</span> <span class="nv">is?</span>
+
+    <span class="p">(</span><span class="nv">ul</span> <span class="nv">@</span><span class="p">(</span><span class="nv">attribute</span> <span class="nv">$</span><span class="p">(</span><span class="nv">value</span><span class="p">))</span>
+      <span class="p">(</span><span class="nv">li</span> <span class="nv">Here</span> <span class="nv">are</span> <span class="o">...</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">li</span> <span class="o">...</span> <span class="nb">some</span> <span class="o">...</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">li</span> <span class="o">...</span> <span class="nb">list</span> <span class="nv">items</span><span class="p">))</span>
+
+    <span class="nv">Here</span> <span class="nv">is</span> <span class="nv">a</span> <span class="p">(</span><span class="nv">a</span> <span class="nv">@</span><span class="p">(</span><span class="nv">href</span> <span class="nv">url</span><span class="p">)</span> <span class="nv">link</span><span class="p">)</span><span class="o">.</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">\p</span> <span class="nv">In</span> <span class="nv">this</span> <span class="nv">paragraph</span> <span class="nv">we</span> <span class="nv">can</span> <span class="nv">use</span> <span class="p">(</span><span class="nv">brackets</span><span class="p">)</span><span class="o">.</span><span class="nv">\)</span>
+  <span class="p">(</span><span class="nv">\\p</span> <span class="nv">And</span> <span class="nv">in</span> <span class="nv">this</span> <span class="nv">one</span> <span class="nv">we</span> <span class="nv">can</span> <span class="nv">use</span> <span class="p">(</span><span class="nv">\brackets</span> <span class="nb">and</span> <span class="nv">backslashes\).\\</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">p</span> <span class="nv">But</span> <span class="nb">not</span> <span class="nv">here!</span><span class="p">))</span>
+</pre></div>
+</div>
 </div>
 
 
@@ -75,15 +78,17 @@ Or maybe this / is?</p>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">2. Base Language</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Markup</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="base.html" title="previous chapter">2. Base Language</a></li>
   </ul></li>
 </ul>
 </div>

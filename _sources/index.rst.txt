@@ -8,6 +8,7 @@ Welcome to Calipto's documentation!
 
    intro
    base
+   sexup
 
 Indices and tables
 ==================
