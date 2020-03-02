@@ -28,7 +28,7 @@ author = 'Elias N Vasylenko'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.todo', 'sphinx.ext.autodoc']
-todo_include_todos=True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -38,6 +38,7 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+highlight_language = 'lisp'
 
 # -- Options for HTML output -------------------------------------------------
 
