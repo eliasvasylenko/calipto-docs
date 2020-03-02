@@ -42,30 +42,72 @@
 <h2>2.2. Primitives<a class="headerlink" href="#primitives" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="data">
 <h3>2.2.1. Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
-<p>There are only two fundamental types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
+<p>There are only two fundamental primitive types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
 <p>It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.</p>
-<p>A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with <cite>:</cite>, though in some circumstances the namespace may be inferred from context in which case the <cite>:</cite> should be omitted. Here are some examples of formatted symbols:
-- <cite>system:true</cite>
-- <cite>false</cite>
-- <cite>nil</cite>
-- <cite>product-domain.com:important-thing</cite></p>
+<p>A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with <cite>:</cite>, though in some circumstances the namespace may be inferred from context in which case the <cite>:</cite> should be omitted. Here are some examples of formatted symbols:</p>
+<ul class="simple">
+<li><p><cite>system:true</cite></p></li>
+<li><p><cite>false</cite></p></li>
+<li><p><cite>nil</cite></p></li>
+<li><p><cite>product-domain.com:important-thing</cite></p></li>
+</ul>
 <p>If two symbols share the same name and namespace then they are equal, otherwise they are not. The symbol <cite>system:nil</cite> may also be formatted as <cite>()</cite>.</p>
-<p>A cons cell is an ordered pair of data. Each half may be a symbol or another cons cell. In the Lisp tradition, the left half of the pair is referred to as the car, and the right half is referred to as the cdr. A cons cell is formatted with the car followed by the cdr, separated with <cite>.</cite>, and surrounded by brackets.
-- <cite>(true . false)</cite>
-- <cite>(hello . (world . ()))</cite>
-- <cite>(system:true . system:false)</cite></p>
-<p>If the cdr holds another cons cell, this can be formatted according to a shorthand notation by omitting the dot and the brackets around the cdr. If the cdr is omitted entirely, it is taken to be <cite>system:nil</cite>. Here are some examples:
-- <cite>(first second third)</cite> is equivalent to <cite>(first . (second . (third . ())))</cite>
-- <cite>(single-element)</cite> is equivalent to <cite>(single-element . ())</cite></p>
-<p>This reflects how lists are typically represented in Calipto; the empty list is represented by the <cite>nil</cite> symbol, and any other list is represented with a cons cell whose car holds the first element and whose cdr holds the remainder of the list. If a list has a symbol other than <cite>nil</cite> in the terminal position, it is considered to be “improper”, and in fact any symbol other than <cite>nil</cite> may be thought of as an improper empty list:
-- <cite>(first second)</cite> is equivalent to <cite>(first second . nil)</cite> is equivalent to <cite>(first . (second . ()))</cite>, and is a proper list with two elements.
-- <cite>(first second . terminal)</cite> is equivalent to <cite>(first . (second . terminal))</cite>, and is an improper list with two elements.</p>
+<p>A cons cell is an ordered pair of data. Each half may be a symbol or another cons cell. In the Lisp tradition, the left half of the pair is referred to as the car, and the right half is referred to as the cdr. A cons cell is formatted with the car followed by the cdr, separated with <cite>.</cite>, and surrounded by brackets.</p>
+<ul class="simple">
+<li><p><cite>(true . false)</cite></p></li>
+<li><p><cite>(hello . (world . ()))</cite></p></li>
+<li><p><cite>(system:true . system:false)</cite></p></li>
+</ul>
+<p>If the cdr holds another cons cell, this can be formatted according to a shorthand notation by omitting the dot and the brackets around the cdr. If the cdr is omitted entirely, it is taken to be <cite>system:nil</cite>. Here are some examples:</p>
+<ul class="simple">
+<li><p><cite>(first second third)</cite> is equivalent to <cite>(first . (second . (third . ())))</cite></p></li>
+<li><p><cite>(single-element)</cite> is equivalent to <cite>(single-element . ())</cite></p></li>
+</ul>
+<p>This reflects how lists are typically represented in Calipto; the empty list is represented by the <cite>nil</cite> symbol, and any other list is represented with a cons cell whose car holds the first element and whose cdr holds the remainder of the list. If a list has a symbol other than <cite>nil</cite> in the terminal position, it is considered to be “improper”, and in fact any symbol other than <cite>nil</cite> may be thought of as an improper empty list:</p>
+<ul class="simple">
+<li><p><cite>(first second)</cite> is equivalent to <cite>(first second . nil)</cite> is equivalent to <cite>(first . (second . ()))</cite>, and is a proper list with two elements.</p></li>
+<li><p><cite>(first second . terminal)</cite> is equivalent to <cite>(first . (second . terminal))</cite>, and is an improper list with two elements.</p></li>
+</ul>
 </div>
 <div class="section" id="functions">
 <h3>2.2.2. Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
-<p>(cons car cdr cont)
-(car cons cont)
-(cdr cons cont)</p>
+<p>Primitive functions are those which cannot be implemented on top of other functions and so must be provided by the platform. Some of them are required to be provided by all platforms, some are optional modulo underlying system capabilities and permissions.</p>
+<ul class="simple">
+<li><p><cite>(cons car cdr k)</cite> Create a cons cell. The value of <cite>car</cite> is “consed onto” the value of <cite>cdr</cite>, and the resulting cons cell is passed to the function <cite>k</cite>.</p></li>
+<li><p><cite>(car cons k f)</cite> Extract the data in the left half of a cons cell. If the value of <cite>cons</cite> is a cons cell, its <cite>car</cite> is passed to the function <cite>k</cite>, otherwise the function <cite>f</cite> is called with no arguments.</p></li>
+<li><p><cite>(cdr cons k f)</cite> Extract the data in the right half of a cons cell. If the value of <cite>cons</cite> is a cons cell, its <cite>cdr</cite> is passed to the function <cite>k</cite>, otherwise the function <cite>f</cite> is called with no arguments.</p></li>
+<li><p><cite>(eq d1 d2 t f)</cite> Make an equality test. Calls <cite>t</cite> if <cite>d1</cite> and <cite>d2</cite> are equal, otherwise calls <cite>f</cite>.</p></li>
+<li><p><cite>(quote a k)</cite> ? This doesn’t behave like a function…</p></li>
+<li><p><cite>(exit)</cite> This function terminates the program.</p></li>
+<li><p><cite>(nondet a b)</cite> Make a non-deterministic choice. One of the two functions <cite>a</cite> and <cite>b</cite> is chosen at the discretion of the compiler or runtime—with no requirements regarding probability—and then called with no arguments. This may seem like a perculiar inclusion in the set of primitives, but careful application of this function allows a platform with special knowledge of it to make certain optimisations and use certain data-structures that appear non-deterministic, without violating the surface semantics of the language.</p></li>
+<li><p><cite>(random a b)</cite> Make a (pseudo)random choice. One of the two functions <cite>a</cite> and <cite>b</cite> is chosen at random and then called with no arguments.</p></li>
+</ul>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Look into options for PRNGs, TRNGs, CSPRNGs. Rather than a global generator, do we want to create handles to generators like resources, that way we can create the same sequence by deliberately reusing the same seed, which is sometimes useful. How much can this be self-hosted? A PRNG can just be implemented in the language, it’s perhaps only the choice of seed which is important to be externalised to a primitive.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://ericlippert.com/2019/01/31/fixing-random-part-1/">https://ericlippert.com/2019/01/31/fixing-random-part-1/</a></p>
+</div>
+<ul class="simple">
+<li><p><cite>(stdin k)</cite> Read from std in</p></li>
+<li><p><cite>(stdout d k)</cite> Write to std out</p></li>
+<li><p><cite>(stderr d k)</cite> Write to std error</p></li>
+<li><p><cite>(open-file path k)</cite> The function <cite>k</cite> accepts functions which operate on the file, including one which closes it. <cite>(open-temp-file k)</cite></p></li>
+<li><p><cite>(env name k)</cite> Get an environment variable</p></li>
+<li><p><cite>(args k)</cite> Get the program arguments</p></li>
+</ul>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all “exits” from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf">https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf</a>
+<a class="reference external" href="https://core.ac.uk/download/pdf/82009715.pdf">https://core.ac.uk/download/pdf/82009715.pdf</a>
+<a class="reference external" href="https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf">https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf</a></p>
+</div>
 </div>
 </div>
 </div>
