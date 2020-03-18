@@ -9,6 +9,7 @@ Welcome to Calipto's documentation!
    intro
    base
    sexup
+   numerics
 
 Indices and tables
 ==================
