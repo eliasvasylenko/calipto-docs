@@ -25,6 +25,8 @@ Expressions
 
 Unlike most other modern languages, any mathematical expression can be represented exactly in Calipto. Operations or constants with irrational values are represented symbolically, and an expression with an irrational value is not fully evaluated but instead simplified. Any expression which is already maximally simplified is therefore self-evaluating.
 
+Expressions are written in an embedded DSL which is macro-expanded into code which efficiently evaluates the result. This allows their syntax to better correspond to typical mathematical notation.
+
 Here are some examples of expressions which resolve to an exact form.
 
 - (# 5/7)                      ; '(/ (+ 1 0 1) (+ 1 1 1))
