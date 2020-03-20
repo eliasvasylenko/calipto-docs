@@ -32,4 +32,4 @@ A deterministic model which can be locally reasoned about; inter-coroutine commu
 Performance
 -----------
 
-A reference implementation supporting both native image generation and an interpreted mode with a state-of-the-art JIT compiler, via `GraalVM & Truffle <https://github.com/oracle/graal>`_.
+A reference implementation supporting both native image generation and an interpreted mode with a state-of-the-art JIT compiler, via `GraalVM & Truffle <https://github.com/oracle/graal>`.
