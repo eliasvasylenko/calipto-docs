@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>4. Numerics &#8212; Calipto  documentation</title>
+    <title>6. Numerics &#8212; Calipto  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -14,7 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="5. Markup" href="sexup.html" />
+    <link rel="next" title="7. Markup" href="sexup.html" />
     <link rel="prev" title="3. Text" href="text.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -33,7 +33,7 @@
           <div class="body" role="main">
             
   <div class="section" id="numerics">
-<h1>4. Numerics<a class="headerlink" href="#numerics" title="Permalink to this headline">¶</a></h1>
+<h1>6. Numerics<a class="headerlink" href="#numerics" title="Permalink to this headline">¶</a></h1>
 <p>There many different ways to represent numbers, and they all have their own tradeoffs. Calipto tries to be flexible and provide defaults appropriate for modern computing.</p>
 <p>When discussing numbers there are a few different views we can take at different levels of abstraction, so let’s define some terms.</p>
 <ul class="simple">
@@ -43,11 +43,11 @@
 <li><p><em>Layout</em> - A scheme for storing a representation in computer memory. The language is designed to facilitate efficient layout, but how it is actually done is entirely implementation dependent. For instance, users can generally expect small integers to be flattened into typical 32 bit or 64 bit representations as appropriate. Implementations should document their exact behaviour.</p></li>
 </ul>
 <div class="section" id="exact-representation">
-<h2>4.1. Exact Representation<a class="headerlink" href="#exact-representation" title="Permalink to this headline">¶</a></h2>
+<h2>6.1. Exact Representation<a class="headerlink" href="#exact-representation" title="Permalink to this headline">¶</a></h2>
 <p>Inexactness in computation numerics is a huge source of problems. It can be extremely difficult to reason about overflow, imprecision, and inaccuracy when using common integer and floating point representations. And worse, most programming languages hide these problems from the programmer, allowing errors to accrue silently and catastrophically failing in surprising ways when exceeding the limits of the underlying representation.</p>
 <p>Some languages attempt to address these problems by using unbounded integers by default, and by representing rationals fractionally, but this still leaves a huge amount of ground uncovered. What about trigonometric operations? Non-integer exponents? Or well-known irrationals like ‘pi’?</p>
 <div class="section" id="expressions">
-<h3>4.1.1. Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h3>
+<h3>6.1.1. Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h3>
 <p>Unlike most other modern languages, any mathematical expression can be represented exactly in Calipto. Operations or constants with irrational values are represented symbolically, and an expression with an irrational value is not fully evaluated but instead simplified. Any expression which is already maximally simplified is therefore self-evaluating.</p>
 <p>Expressions are written in an embedded DSL which is macro-expanded into code which efficiently evaluates the result. This allows their syntax to better correspond to typical mathematical notation.</p>
 <p>Here are some examples of expressions which resolve to an exact form.</p>
@@ -60,7 +60,7 @@
 <p>Exact rational numbers are all expressed in binary as integers or irreducible fractions. The representation never contains leading zeros. These numbers are considered expressions, and are self-evaluating.</p>
 </div>
 <div class="section" id="literals">
-<h3>4.1.2. Literals<a class="headerlink" href="#literals" title="Permalink to this headline">¶</a></h3>
+<h3>6.1.2. Literals<a class="headerlink" href="#literals" title="Permalink to this headline">¶</a></h3>
 <p>All numeric literals evaluate to exact rational numbers. The literal forms have the following properties:
 They are expressed in positional notation.
 A radix <cite>.</cite> can optionally be included.
@@ -76,15 +76,15 @@ The default base is usually 10, and the maximum base is 36 (each decimal digit, 
 </div>
 </div>
 <div class="section" id="inexact-representation">
-<h2>4.2. Inexact Representation<a class="headerlink" href="#inexact-representation" title="Permalink to this headline">¶</a></h2>
+<h2>6.2. Inexact Representation<a class="headerlink" href="#inexact-representation" title="Permalink to this headline">¶</a></h2>
 <p>Though exact representations are useful, they aren’t always appropriate. Irrational numbers cannot simplify to a single number in a portable format, and time and space requirements can quickly compound beyond reasonable boundaries, especially for iterative computation. For these reasons, we need to be able to evaluate expressions to inexact representations.</p>
 <p>Inexact representations are only evaluated when explicitly requested. This way the programmer never silently and opaquely loses precision, they are always in direct control of how and when rounding occurs.</p>
 <div class="section" id="rounding">
-<h3>4.2.1. Rounding<a class="headerlink" href="#rounding" title="Permalink to this headline">¶</a></h3>
+<h3>6.2.1. Rounding<a class="headerlink" href="#rounding" title="Permalink to this headline">¶</a></h3>
 <p>Numbers can be rounded to a given number of significant figures or places, in any base. This doesn’t require that the representation reflect the base in question, and in fact all numbers are still stored as binary fractions when this operation is performed.</p>
 </div>
 <div class="section" id="conversion">
-<h3>4.2.2. Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h3>
+<h3>6.2.2. Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 </div>
@@ -111,12 +111,14 @@ The default base is usually 10, and the maximum base is 36 (each decimal digit, 
 <li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">2. Base Language</a></li>
 <li class="toctree-l1"><a class="reference internal" href="text.html">3. Text</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Numerics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#exact-representation">4.1. Exact Representation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#inexact-representation">4.2. Inexact Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="text.html#representation">4. Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="text.html#layout">5. Layout</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Numerics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#exact-representation">6.1. Exact Representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inexact-representation">6.2. Inexact Representation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sexup.html">5. Markup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sexup.html">7. Markup</a></li>
 </ul>
 
 <div class="relations">
@@ -124,7 +126,7 @@ The default base is usually 10, and the maximum base is 36 (each decimal digit, 
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="text.html" title="previous chapter">3. Text</a></li>
-      <li>Next: <a href="sexup.html" title="next chapter">5. Markup</a></li>
+      <li>Next: <a href="sexup.html" title="next chapter">7. Markup</a></li>
   </ul></li>
 </ul>
 </div>

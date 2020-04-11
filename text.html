@@ -14,7 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="4. Numerics" href="numerics.html" />
+    <link rel="next" title="6. Numerics" href="numerics.html" />
     <link rel="prev" title="2. Base Language" href="base.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -36,14 +36,14 @@
 <h1>3. Text<a class="headerlink" href="#text" title="Permalink to this headline">¶</a></h1>
 <p>When discussing text in the context of programming there are a few different views we can take at different levels of abstraction, so let’s define some terms.</p>
 <ul class="simple">
-<li><p><em>Literal</em> - A piece of text as it appears in source code.</p></li>
-<li><p><em>String</em> - A sequence of abstract characters which defines a piece of text.</p></li>
-<li><p><em>Character</em> - The indivisible unit from which text is composed.</p></li>
+<li><p><em>Literal</em> - A piece of textual data as it appears in source code.</p></li>
+<li><p><em>String</em> - A sequence of characters which defines a piece of text in the abstract.</p></li>
+<li><p><em>Character</em> - The indivisible unit from which a string is composed.</p></li>
 <li><p><em>Representation</em> - The s-expressions which represent strings and characters at runtime. Every string must be encodable in Unicode, and all Unicode text must be representable as a string.</p></li>
-<li><p><em>Layout</em> - A scheme for storing a representation in computer memory. A typical implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement.</p></li>
+<li><p><em>Layout</em> - A scheme for storing a representation in computer memory. A typical implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement as the choice should not be visible to user code.</p></li>
 </ul>
-<div class="section" id="string-literals">
-<h2>3.1. String Literals<a class="headerlink" href="#string-literals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="literals">
+<h2>3.1. Literals<a class="headerlink" href="#literals" title="Permalink to this headline">¶</a></h2>
 <p>Basic string literals in Calipto are delimited by quotes <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;For example, this is a string.&quot;</span>
 </pre></div>
@@ -76,24 +76,44 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="strings">
+<h2>3.2. Strings<a class="headerlink" href="#strings" title="Permalink to this headline">¶</a></h2>
+<p>A string is simply a sequence of characters, so this is how Calipto represents them. Simply as a proper list with each subsequent element being the subsequent character.</p>
+</div>
 <div class="section" id="characters">
-<h2>3.2. Characters<a class="headerlink" href="#characters" title="Permalink to this headline">¶</a></h2>
+<h2>3.3. Characters<a class="headerlink" href="#characters" title="Permalink to this headline">¶</a></h2>
 <p>If a string is a sequence of characters, we need to define exactly what constitutes a “character” and how this notion is represented at runtime. This turns out be be a tricky choice with a number of subtle tradeoffs, as the word character is heavily overloaded.</p>
 <p>In the Unicode standard there are a few candidates for what could be considered a character.</p>
 <ul class="simple">
-<li><p>A <em>glyph</em> is a specific written representation of a grapheme, for instance the way a grapheme is rendered according to a choice of font.</p></li>
-<li><p>A <em>grapheme</em> is what a human reader would typically consider a single character. It may be composed of multiple code points.</p></li>
-<li><p>A <em>code point</em> is the unit of information of text in the abstract. It is independent of encoding and may be composed of multiple code units.</p></li>
+<li><p>A <em>glyph</em> is a specific written representation of a “grapheme”, for instance the way a grapheme is rendered according to a choice of font.</p></li>
+<li><p>A <em>grapheme</em> is what a human reader would typically consider a single character. It may be composed of multiple “code points”.</p></li>
+<li><p>A <em>code point</em> is the unit of information of text in the abstract. It is independent of encoding and may be composed of multiple “code units”.</p></li>
 <li><p>A <em>code unit</em> is the unit of encoding of text as a series of bytes. It is dependent on the chosen encoding format (i.e. UTF-8, UTF-16, UTF-32, etc.)</p></li>
 </ul>
 <p>In Calipto we choose code points as our unit of representation, and hereafter we will interchangeably refer to code points as characters. The justification for this choice is multi-faceted.</p>
 <p>Code units are unsuitable to be the character unit, as they are an artifact of the choice of encoding which is generally considered to be an implementation detail. Glyphs, too, are unsuitable to be the character unit, as they are concerned with the manner of representation of text rather than the abstract text itself.</p>
 <p>Graphemes are a more attractive target, but unfortunately they are sometimes defined to be locale-dependent in Unicode, and it is also sometimes useful to manipulate text at the sub-grapheme level.</p>
-<p>So for these reasons, code points are left as the best option to be our character, and our unit of representation. This has a few other benefits, for instance it aligns with the Unicode standard, which assigns “Abstract Characters” to single code points. It also simplifies laying characters out in memory in some circumstances, as all code points can fit into the same fixed amount of space.</p>
+<p>So for these reasons, code points are left as the best option to be our character, and our unit of representation. This has a few other benefits, for instance it aligns with the terminology of the Unicode standard, which assigns “Abstract Characters” to single code points. It also simplifies laying characters out in memory in some circumstances, as all code points can fit into the same fixed amount of space.</p>
 <p>However, many text manipulation tasks should operate over graphemes and not “characters”, and for this reason many of the operations defined over text are parametric with a strategy for “clustering” graphemes.</p>
 </div>
+</div>
+<div class="section" id="representation">
+<h1>4. Representation<a class="headerlink" href="#representation" title="Permalink to this headline">¶</a></h1>
+<p>We have defined an abstract notion of a character for our purposes, but we have not discussed how a character is to be represented at runtime. In Calipto we choose to represent each character as a distinct symbol in a special namespace <code class="docutils literal notranslate"><span class="pre">unicode</span></code>.</p>
+<p>The purpose of a symbol is only to describe a unique combination of name and namespace. It is tempting to say that the symbol name for a character should be the character itself, but this is problematic:</p>
+<ul class="simple">
+<li><p>Some symbols are “combining marks” which don’t make sense by themselves, for example accents.</p></li>
+<li><p>Whitespace characters would not appear in some circumstances.</p></li>
+<li><p>Many characters are indistinguishable in most fonts.</p></li>
+</ul>
+<p>Instead, the name for a character’s symbol is simply the unicode name string.</p>
+</div>
+<div class="section" id="layout">
+<h1>5. Layout<a class="headerlink" href="#layout" title="Permalink to this headline">¶</a></h1>
+<p>It might feel unnecessarily “heavy” to burden each character of a string with its entire name, but when processing strings we don’t actually have to reflect over the names of the symbols of the constituent characters so we can still lay the characters out in memory efficiently and operate on them quickly. It’s typically only for debugging purposes that the system will be asked to fetch the name of a character symbol, at which point it may be useful for the programmer to be given a full name.</p>
+<p>Since characters are represented nominally rather than numerically by index, this does preclude use from easily employing arithmetic over characters at the language level. Since the layout is likely to be numeric, however, tricks such as intrinsics can be used to avoid having to materialise huge tables just to encode and decode text, so Calipto should be able to perform these tasks as fast as any language.</p>
 <div class="section" id="graphemes">
-<h2>3.3. Graphemes<a class="headerlink" href="#graphemes" title="Permalink to this headline">¶</a></h2>
+<h2>5.1. Graphemes<a class="headerlink" href="#graphemes" title="Permalink to this headline">¶</a></h2>
 <p>TODO discuss grapheme clustering.
 Normalisation
 TODO discuss normalisation &amp; equivalence (Unicode specifies 4 normal forms!)</p>
@@ -101,7 +121,7 @@ TODO discuss normalisation &amp; equivalence (Unicode specifies 4 normal forms!)
 <p>Newlines are just n on all platforms by default.</p>
 </div>
 <div class="section" id="scanning">
-<h2>3.4. Scanning<a class="headerlink" href="#scanning" title="Permalink to this headline">¶</a></h2>
+<h2>5.2. Scanning<a class="headerlink" href="#scanning" title="Permalink to this headline">¶</a></h2>
 <p>Characters in strings cannot be directly indexed, they must be reached and counted by iterating over them. This is to make it easier for language implementations to choose compressed storage strategies such as UTF-8 or UTF-16.</p>
 <p>Graphemes can also not be directly indexed or counted. TODO explain why.</p>
 <p>In other words, most useful operations over strings are defined iteratively. It turns out that iterative operations are more widely applicable than just to static strings, for instance we may also be able to iterate efficiently over streaming network sources, or text generated dynamically. For this reason we abstract all our important string processing operations into a more general text scanning API.</p>
@@ -130,14 +150,19 @@ TODO discuss normalisation &amp; equivalence (Unicode specifies 4 normal forms!)
 <li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">2. Base Language</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. Text</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#string-literals">3.1. String Literals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#characters">3.2. Characters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#graphemes">3.3. Graphemes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#scanning">3.4. Scanning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#literals">3.1. Literals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#strings">3.2. Strings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#characters">3.3. Characters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="numerics.html">4. Numerics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sexup.html">5. Markup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#representation">4. Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#layout">5. Layout</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#graphemes">5.1. Graphemes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scanning">5.2. Scanning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="numerics.html">6. Numerics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sexup.html">7. Markup</a></li>
 </ul>
 
 <div class="relations">
@@ -145,7 +170,7 @@ TODO discuss normalisation &amp; equivalence (Unicode specifies 4 normal forms!)
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="base.html" title="previous chapter">2. Base Language</a></li>
-      <li>Next: <a href="numerics.html" title="next chapter">4. Numerics</a></li>
+      <li>Next: <a href="numerics.html" title="next chapter">6. Numerics</a></li>
   </ul></li>
 </ul>
 </div>
