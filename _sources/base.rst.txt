@@ -89,7 +89,43 @@ What if clients try to manually materialise a version of one of these functions?
 
 If we are only permitted to create symbols from a given namespace if they're explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.
 
-For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. ``file:///data.txt-0`` is a symbol with the namespace ``file`` and the name ``///data.txt-0`` and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.
+To protect structured data is more difficult. There are two possible approaches.
+
+- Our first option is to disallow arbitrary structured data from being constructed by adding an extra ``fail`` continuation to the signature of ``cons`` so that we can reject attempts to cons with protected symbols.
+  
+- Our second option is to disallow arbitrary structured data from being destructured, so that we can reject attempts to des with protecte symbols. This has the unfortunate effect of breaking the semantics that we can determine whether something is a cons cell by attempting to des it. It also has the unfortunate (/fortunate?) effect that we can nolonger expect to be able to reflect over all data. 
+
+For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. ``file:///data.txt\0`` is a symbol with the namespace ``file`` and the name ``///data.txt\0`` and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.
+
+``uri:|https://calipto.org|``
+
+``uri:|https://calipto.org|``
+
+``uri:|connection https://calipto.org 0|``
+
+``uri:|in https://calipto.org 0 0|``
+
+``uri:|out https://calipto.org 0 0|``
+
+``uri:scheme``
+
+Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.
+
+This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with spaces.
+
+``uri:|((uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))|``
+
+``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
+
+Alternatively it could use a custom mapping appropriate 
+
+``uri:|https://calipto.org/docs|``
+
+``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
+
+The problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.
+
+Is it okay for a datum to look like a symbol to one module and look like a structure to another?
 
 .. todo::
 
