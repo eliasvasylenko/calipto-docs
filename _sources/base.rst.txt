@@ -20,20 +20,20 @@ It may seem like a performance concern that there are no built in types for nume
 
 A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with ``:``, though in some circumstances the namespace may be inferred from context in which case the ``:`` should be omitted. Here are some examples of formatted symbols:
 
-- ``system:true``
+- ``bool:true``
 - ``false``
 - ``nil``
 - ``product-domain.com:important-thing``
 
-If two symbols share the same name and namespace then they are equal, otherwise they are not. The symbol ``system:nil`` may also be formatted as ``()``.
+If two symbols share the same name and namespace then they are equal, otherwise they are not. The symbol ``data:nil`` may also be formatted as ``()``.
 
 A cons cell is an ordered pair of data. Each half may be a symbol or another cons cell. In the Lisp tradition, the left half of the pair is referred to as the car, and the right half is referred to as the cdr. A cons cell is formatted with the car followed by the cdr, separated with ``.``, and surrounded by brackets.
 
 - ``(true . false)``
 - ``(hello . (world . ()))``
-- ``(system:true . system:false)``
+- ``(bool:true . bool:false)``
 
-If the cdr holds another cons cell, this can be formatted according to a shorthand notation by omitting the dot and the brackets around the cdr. If the cdr is omitted entirely, it is taken to be ``system:nil``. Here are some examples:
+If the cdr holds another cons cell, this can be formatted according to a shorthand notation by omitting the dot and the brackets around the cdr. If the cdr is omitted entirely, it is taken to be ``data:nil``. Here are some examples:
 
 - ``(first second third)`` is equivalent to ``(first . (second . (third . ())))``
 - ``(single-element)`` is equivalent to ``(single-element . ())``
@@ -48,15 +48,21 @@ Functions
 
 Primitive functions are those which cannot be implemented on top of other functions and so must be provided by the platform. Some of them are required to be provided by all platforms, some are optional modulo underlying system capabilities and permissions.
 
-- ``(cons car cdr k)`` Create a cons cell. The value of ``car`` is "consed onto" the value of ``cdr``, and the resulting cons cell is passed to the function ``k``.
-- ``(car cons k f)`` Extract the data in the left half of a cons cell. If the value of ``cons`` is a cons cell, its ``car`` is passed to the function ``k``, otherwise the function ``f`` is called with no arguments.
-- ``(cdr cons k f)`` Extract the data in the right half of a cons cell. If the value of ``cons`` is a cons cell, its ``cdr`` is passed to the function ``k``, otherwise the function ``f`` is called with no arguments.
-- ``(eq d1 d2 t f)`` Make an equality test. Calls ``t`` if ``d1`` and ``d2`` are equal, otherwise calls ``f``.
-- ``(quote a k)`` ? This doesn't behave like a function...
-- ``(exit)`` This function terminates the program.
+- ``(data:cons car cdr k)`` Create a cons cell. The value of ``car`` is "consed onto" the value of ``cdr``, and the resulting cons cell is passed to the function ``k``.
+- ``(data:des cons k f)`` Extract the data from each half of a cons cell. If the value of ``cons`` is a cons cell, its ``car`` and ``cdr`` are passed to the function ``k``, otherwise the function ``f`` is called with no arguments.
+- ``(data:eq d1 d2 t f)`` Make an equality test. Calls ``t`` if ``d1`` and ``d2`` are equal, otherwise calls ``f``.
+- ``(system:exit)`` This function terminates the program.
 
-- ``(nondet a b)`` Make a non-deterministic choice. One of the two functions ``a`` and ``b`` is chosen at the discretion of the compiler or runtime---with no requirements regarding probability---and then called with no arguments. This may seem like a perculiar inclusion in the set of primitives, but careful application of this function allows a platform with special knowledge of it to make certain optimisations and use certain data-structures that appear non-deterministic, without violating the surface semantics of the language.
-- ``(random a b)`` Make a (pseudo)random choice. One of the two functions ``a`` and ``b`` is chosen at random and then called with no arguments.
+- ``(random:choose-nondet a b)`` Make a non-deterministic choice. One of the two functions ``a`` and ``b`` is chosen at the discretion of the compiler or runtime---with no requirements regarding probability---and then called with no arguments. This may seem like a perculiar inclusion in the set of primitives, but careful application of this function allows a platform with special knowledge of it to make certain optimisations and use certain data-structures that appear non-deterministic, without violating the surface semantics of the language.
+- ``(random:choose a b)`` Make a (possibly-pseudo)random choice. One of the two functions ``a`` and ``b`` is chosen at random and then called with no arguments.
+
+Special Forms
+~~~~~~~~~~~~~
+
+Special forms are not functions and don't behave as such. This means that they do not follow the continuation-passing style; instead they behave like expressions, evaluating directly to their result. This makes them easy to distinguish from functions based on where they appear in code.
+
+- ``(data:quote a)`` Evaluates to the datum ``a``, without attempting to evaluate it.
+- ``(data:lambda p b)`` Evaluates to a function accepting arguments for the parameter list ``p`` and evaluating the function call expressed in the body ``b``. A function can also be defined by quotataion, but the lambda expression has the additional purpose of introducing a lexical scope over the parameter list, and of capturing the lexical scope in which it appears.
 
 .. todo::
 
@@ -87,7 +93,7 @@ When we have an output function, such as e.g. ``print-stdout``, the definition i
 
 What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn't been reached yet the system won't know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.
 
-If we are only permitted to create symbols from a given namespace if they're explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.
+If we are only permitted to reference symbols from a given namespace if they're explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.
 
 To protect structured data is more difficult. There are two possible approaches.
 
