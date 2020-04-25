@@ -127,14 +127,14 @@
 <p><code class="docutils literal notranslate"><span class="pre">uri:|out</span> <span class="pre">https://calipto.org</span> <span class="pre">0</span> <span class="pre">0|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:scheme</span></code></p>
 <p>Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.</p>
-<p>This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with spaces.</p>
+<p>This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|((uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>Alternatively it could use a custom mapping appropriate</p>
+<p>Alternatively it could use a custom mapping as appropriate</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
 <p>The problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.</p>
-<p>Is it okay for a datum to look like a symbol to one module and look like a structure to another?</p>
+<p>Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?</p>
 <div class="admonition-todo admonition" id="id2">
 <p class="admonition-title">Todo</p>
 <p>Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all “exits” from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?</p>

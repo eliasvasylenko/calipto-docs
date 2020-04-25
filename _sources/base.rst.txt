@@ -117,13 +117,13 @@ For files/URLs the symbol name of the function could be an actual URL. Perhaps w
 
 Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.
 
-This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with spaces.
+This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.
 
 ``uri:|((uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))|``
 
 ``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
 
-Alternatively it could use a custom mapping appropriate 
+Alternatively it could use a custom mapping as appropriate 
 
 ``uri:|https://calipto.org/docs|``
 
@@ -131,7 +131,7 @@ Alternatively it could use a custom mapping appropriate
 
 The problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.
 
-Is it okay for a datum to look like a symbol to one module and look like a structure to another?
+Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?
 
 .. todo::
 
