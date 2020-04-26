@@ -12,6 +12,8 @@ Compiler
 
 The Calipto compiler is essentially nothing more than a simple macro expander, but from this carefully-designed interface we can bootstrap almost any kind of compiler and runtime that can be imagined; from document generators for markup languages, to parser generators for grammar specifications, to fully fledged programming language runtimes. And all without sacrificing performance!
 
+Macros are expanded by decorating the ``read`` effect 
+
 Types
 -----
 
