@@ -129,7 +129,9 @@ Alternatively it could use a custom mapping as appropriate
 
 ``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
 
-The problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.
+One problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.
+
+Another problem is that it's pretty all or nothing, total encapsulation without any API, so it might make e.g. typechecking impossible. For built-ins that's fine, the typechecker will need special knowledge of how to deal with built-ins either way since they aren't possible to express as pure lambdas (that's the point).
 
 Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?
 

@@ -133,7 +133,8 @@
 <p>Alternatively it could use a custom mapping as appropriate</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>The problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.</p>
+<p>One problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.</p>
+<p>Another problem is that it’s pretty all or nothing, total encapsulation without any API, so it might make e.g. typechecking impossible. For built-ins that’s fine, the typechecker will need special knowledge of how to deal with built-ins either way since they aren’t possible to express as pure lambdas (that’s the point).</p>
 <p>Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?</p>
 <div class="admonition-todo admonition" id="id2">
 <p class="admonition-title">Todo</p>
