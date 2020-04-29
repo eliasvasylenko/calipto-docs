@@ -47,7 +47,7 @@ Functions
 ~~~~~~~~~
 
 Primitive functions are those which cannot be implemented on top of other functions and so must be provided by the platform. Some of them are required to be provided by all platforms, some are optional modulo underlying system capabilities and permissions.
-
+:
 - ``(data:cons car cdr k)`` Create a cons cell. The value of ``car`` is "consed onto" the value of ``cdr``, and the resulting cons cell is passed to the function ``k``.
 - ``(data:des cons k f)`` Extract the data from each half of a cons cell. If the value of ``cons`` is a cons cell, its ``car`` and ``cdr`` are passed to the function ``k``, otherwise the function ``f`` is called with no arguments.
 - ``(data:eq d1 d2 t f)`` Make an equality test. Calls ``t`` if ``d1`` and ``d2`` are equal, otherwise calls ``f``.
@@ -63,6 +63,14 @@ Special forms are not functions and don't behave as such. This means that they d
 
 - ``(data:quote a)`` Evaluates to the datum ``a``, without attempting to evaluate it.
 - ``(data:lambda p b)`` Evaluates to a function accepting arguments for the parameter list ``p`` and evaluating the function call expressed in the body ``b``. A function can also be defined by quotataion, but the lambda expression has the additional purpose of introducing a lexical scope over the parameter list, and of capturing the lexical scope in which it appears.
+
+.. note::
+
+  If a lambda special form cannot be evaluated this is a syntax error. This does not require any control flow management for the failure path as the error can always be detected statically and so it should never be encountered during evaluation.
+
+.. note::
+
+  Readers familiar with the quasiquote macro---which is taken from Lisp---might ask why the quote special form doesn't allow unquoting. After all, the lambda special form already performs a similar trick when it captures local scope. The difference is that quasiquote is not a fundamental primitive; it can be implemented via ``data:quote`` and ``data:cons``. The set of special forms is intended to be minimal and should not be burdened with unecessary complexity.
 
 .. todo::
 
