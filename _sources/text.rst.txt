@@ -20,15 +20,31 @@ Basic string literals in Calipto are delimited by quotes ``"``::
 
   "For example, this is a string."
 
-Unlike in most languages, literals in Calipto do not support escape sequences. Instead, if a string is to contain quotes, the delimiters must be modified by way of surrounding the string with backslashes ``\``::
+Unlike in most languages, string literals in Calipto do not support escape sequences. Instead, if a string is to contain quotes, the delimiters must be made longer so as to distinguish them from the string content::
 
-  \"Thus any quotes within the string are "disambiguated" from the delimiters."\
+  ""Thus any quotes within the string are "disambiguated" from the delimiters.""
 
-And in the same way, if a string is to contain backslashes, the delimiters must be extended with a sequence of backslashes which exceeds the longest sequence within the string. The number of backslashes before the opening delimiter must match the number after the closing delimiter::
+A string can also span multiple lines::
 
-  \\\"And now we can put one \ or two \\ backslashes in our string."\\\
+  ""
+  This is a multi-line literal.""
 
-In languages which support escape sequences, programmers are forced to visually parse an embedded DSL just to understand what the contents of a string will be at runtime, but in Calipto the contents are always exactly as they appear.
+  ""
+  And this is a
+  multi-line string.""
+
+In this case, the opening delimiter must be immediately followed by a newline, and every following line must be aligned to it by preceding spaces. The closing delimiter may also appear on a new line. The first and last newlines are ignored when present, as are the aligning spaces::
+
+  (uppercase ""
+             Help!
+             Please!
+             "")
+
+Readers may notice that single-line literals cannot begin and end with quotes, as they cannot be distinguished from delimiters. Such strings must be written as multi-line literals::
+
+  ""
+  "Hello," Said the man, "I come in peace."
+  ""
 
 The choice not to support escape sequences or backslashes is justified by the ease with which strings can be concatenated::
 
@@ -36,17 +52,30 @@ The choice not to support escape sequences or backslashes is justified by the ea
 
   (cat multiplier " times 2.5 is " (#decimal 2.5 multiplier))
 
-We can also use our escape notation to help make our opening and closing delimiters "heavier" in long concatenations, and to disambiguate them visually::
+  (strip-indent (cat ""\
+                     This is the first line...
+                     ... and this is the second!
+                     Here's a value in quotes: "\"" (inline-value) ""\"!
+                     And now for the final line.
+                     \""))
 
-  (cat \"Thingy is at point ["\ x ", " y "]")
+.. todo::
+  
+  Maybe we should support escapes? They can be explicitly enabled by following the opening delimiter with a sequence of backslashes.
 
-It's also possible for string literals to span multiple lines::
+  (strip-indent (cat ""\
+                     This is the first line...
+                     ... and this is the second!
+                     Here's a value in quotes: "\ (inline-value)"!
+                     And now for the final line.
+                     \""))
+  
+  In this example an interpolated value is an escape marker followed by whitespace. We don't need special syntax to close the interpolated value, we just call "read" on the scanner at that point and it ends where it ends...
 
-  (strip-indent (cat \"
-    This is the first line...
-    ... and this is the second!
-    Here's a value in quotes: ""\ (inline-value) \""!
-    And now for the final line."\)))
+  This combination of rules does make it oddly difficult to start a string with slashes...
+  "\
+  \this line is the string proper\
+  \"
 
 Strings
 -------
