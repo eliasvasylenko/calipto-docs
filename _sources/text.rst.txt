@@ -44,6 +44,12 @@ In this case, the opening delimiter must be immediately followed by a newline, a
              Please!
              ")
 
+  (unescape \\
+    This is a string!
+    \\)
+
+  (unescape \ This is a string with an \inline value\)
+
 Readers may notice that single-line literals cannot begin and end with quotes, as they cannot be distinguished from delimiters. Such strings must be written as multi-line literals::
 
   """
@@ -67,11 +73,11 @@ The choice not to support escape sequences or backslashes is justified by the ea
   \"\multiplier times 2.5 is \(#decimal 2.5 multiplier))
   \"
 
-  (escape \ "\multiplier times 2.5 is \(#decimal 2.5 multiplier)\")
+  (unescape \ "\multiplier times 2.5 is \(#decimal 2.5 multiplier)\")
 
-  (escape $ "C:\Users\$(name user)\.app\$")
+  (unescape $ "C:\Users\$(name user)\.app\$")
 
-  (escape ( ) "C:\Users\(user-name)\.app\")
+  (unescape ( ) "C:\Users\(user-name)\.app\")
 
   (cat "C:\Users\" (name user) "\.app\")
 
@@ -83,7 +89,7 @@ The choice not to support escape sequences or backslashes is justified by the ea
     ... and this is the second!
     Here's a value in quotes: "\(inline-value)"!
     And now for the final line.
-    \"))
+    \")
 
   (strip-indent (cat \"\
                      This is the first line...

@@ -69,6 +69,12 @@
            Help!
            Please!
            &quot;)
+
+(unescape \\
+  This is a string!
+  \\)
+
+(unescape \ This is a string with an \inline value\)
 </pre></div>
 </div>
 <p>Readers may notice that single-line literals cannot begin and end with quotes, as they cannot be distinguished from delimiters. Such strings must be written as multi-line literals:</p>
@@ -93,11 +99,11 @@
 \&quot;\multiplier times 2.5 is \(#decimal 2.5 multiplier))
 \&quot;
 
-(escape \ &quot;\multiplier times 2.5 is \(#decimal 2.5 multiplier)\&quot;)
+(unescape \ &quot;\multiplier times 2.5 is \(#decimal 2.5 multiplier)\&quot;)
 
-(escape $ &quot;C:\Users\$(name user)\.app\$&quot;)
+(unescape $ &quot;C:\Users\$(name user)\.app\$&quot;)
 
-(escape ( ) &quot;C:\Users\(user-name)\.app\&quot;)
+(unescape ( ) &quot;C:\Users\(user-name)\.app\&quot;)
 
 (cat &quot;C:\Users\&quot; (name user) &quot;\.app\&quot;)
 
@@ -109,7 +115,7 @@
   ... and this is the second!
   Here&#39;s a value in quotes: &quot;\(inline-value)&quot;!
   And now for the final line.
-  \&quot;))
+  \&quot;)
 
 (strip-indent (cat \&quot;\
                    This is the first line...
