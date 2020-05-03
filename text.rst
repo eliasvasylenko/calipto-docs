@@ -11,7 +11,7 @@ When discussing text in the context of programming there are a few different vie
 
 - *Representation* - The s-expressions which represent strings and characters at runtime. Every string must be encodable in Unicode, and all Unicode text must be representable as a string.
 
-- *Layout* - A scheme for storing a representation in computer memory. A typical implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement as the choice should not be visible to user code.
+- *Layout* - A scheme for storing a representation in computer memory. A typical compiler or runtime implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement as the choice should not be visible to user code.
 
 Literals
 --------
@@ -20,31 +20,43 @@ Basic string literals in Calipto are delimited by quotes ``"``::
 
   "For example, this is a string."
 
-Unlike in most languages, string literals in Calipto do not support escape sequences. Instead, if a string is to contain quotes, the delimiters must be made longer so as to distinguish them from the string content::
+Unlike in most languages, string literals in Calipto do not support escape sequences by default. Instead, if a string is to contain quotes, the delimiters must be made longer so as to distinguish them from the string content::
 
   ""Thus any quotes within the string are "disambiguated" from the delimiters.""
 
+This means that the literal ``""`` cannot be used to denote an empty string, since it is ambiguous with an opening delimiter. This is not a problem, as the empty string is just an empty list and can be denoted by ``()``.
+
 A string can also span multiple lines::
 
-  ""
-  This is a multi-line literal.""
+  "
+  This is a multi-line literal denoting a single-line string.
+  "
 
   ""
-  And this is a
-  multi-line string.""
+  And this is a multi-line literal denoting ...
+  ... a "multi-line" string.
+  ""
 
-In this case, the opening delimiter must be immediately followed by a newline, and every following line must be aligned to it by preceding spaces. The closing delimiter may also appear on a new line. The first and last newlines are ignored when present, as are the aligning spaces::
+In this case, the opening delimiter must be immediately followed by a newline, and every following line must be aligned to it by preceding spaces. The first and last newlines are ignored when present, as are the aligning spaces::
 
-  (uppercase ""
+  (uppercase "
              Help!
              Please!
-             "")
+             ")
 
 Readers may notice that single-line literals cannot begin and end with quotes, as they cannot be distinguished from delimiters. Such strings must be written as multi-line literals::
 
-  ""
-  "Hello," Said the man, "I come in peace."
-  ""
+  """
+  "Hello," she said, "I come in peace."
+
+  """
+
+  \""Hello," she said, "I come in peace."\"
+
+  (strip-indent
+    \"\
+    "Hello," she said, "I come in peace."
+    \")
 
 The choice not to support escape sequences or backslashes is justified by the ease with which strings can be concatenated::
 
@@ -52,10 +64,38 @@ The choice not to support escape sequences or backslashes is justified by the ea
 
   (cat multiplier " times 2.5 is " (#decimal 2.5 multiplier))
 
-  (strip-indent (cat ""\
+  \"\multiplier times 2.5 is \(#decimal 2.5 multiplier))
+  \"
+
+  (escape \ "\multiplier times 2.5 is \(#decimal 2.5 multiplier)\")
+
+  (escape $ "C:\Users\$(name user)\.app\$")
+
+  (escape ( ) "C:\Users\(user-name)\.app\")
+
+  (cat "C:\Users\" (name user) "\.app\")
+
+  "\ \multiplier times 2.5 is \(#decimal 2.5 multiplier)) \"
+
+  (unescape
+    \"\
+    This is the first line...
+    ... and this is the second!
+    Here's a value in quotes: "\(inline-value)"!
+    And now for the final line.
+    \"))
+
+  (strip-indent (cat \"\
                      This is the first line...
                      ... and this is the second!
-                     Here's a value in quotes: "\"" (inline-value) ""\"!
+                     Here's a value in quotes: "\" (inline-value) \""!
+                     And now for the final line.
+                     \"))
+
+  (strip-indent (cat ""
+                     This is the first line...
+                     ... and this is the second!
+                     Here's a value in quotes: """ (inline-value) ""\"!
                      And now for the final line.
                      \""))
 
@@ -66,16 +106,16 @@ The choice not to support escape sequences or backslashes is justified by the ea
   (strip-indent (cat ""\
                      This is the first line...
                      ... and this is the second!
-                     Here's a value in quotes: "\ (inline-value)"!
+                     Here's a value in quotes: "\(inline-value)"!
                      And now for the final line.
                      \""))
   
   In this example an interpolated value is an escape marker followed by whitespace. We don't need special syntax to close the interpolated value, we just call "read" on the scanner at that point and it ends where it ends...
 
   This combination of rules does make it oddly difficult to start a string with slashes...
-  "\
+  "
   \this line is the string proper\
-  \"
+  "
 
 Strings
 -------
