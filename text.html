@@ -40,7 +40,7 @@
 <li><p><em>String</em> - A sequence of characters which defines a piece of text in the abstract.</p></li>
 <li><p><em>Character</em> - The indivisible unit from which a string is composed.</p></li>
 <li><p><em>Representation</em> - The s-expressions which represent strings and characters at runtime. Every string must be encodable in Unicode, and all Unicode text must be representable as a string.</p></li>
-<li><p><em>Layout</em> - A scheme for storing a representation in computer memory. A typical implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement as the choice should not be visible to user code.</p></li>
+<li><p><em>Layout</em> - A scheme for storing a representation in computer memory. A typical compiler or runtime implementation may choose to lay out strings according to a standard encoding such as UTF-8 or UTF-32, but this is not a requirement as the choice should not be visible to user code.</p></li>
 </ul>
 <div class="section" id="literals">
 <h2>3.1. Literals<a class="headerlink" href="#literals" title="Permalink to this headline">¶</a></h2>
@@ -48,30 +48,41 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;For example, this is a string.&quot;</span>
 </pre></div>
 </div>
-<p>Unlike in most languages, string literals in Calipto do not support escape sequences. Instead, if a string is to contain quotes, the delimiters must be made longer so as to distinguish them from the string content:</p>
+<p>Unlike in most languages, string literals in Calipto do not support escape sequences by default. Instead, if a string is to contain quotes, the delimiters must be made longer so as to distinguish them from the string content:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;&quot;</span><span class="n">Thus</span> <span class="nb">any</span> <span class="n">quotes</span> <span class="n">within</span> <span class="n">the</span> <span class="n">string</span> <span class="n">are</span> <span class="s2">&quot;disambiguated&quot;</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">delimiters</span><span class="o">.</span><span class="s2">&quot;&quot;</span>
 </pre></div>
 </div>
+<p>This means that the literal <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> cannot be used to denote an empty string, since it is ambiguous with an opening delimiter. This is not a problem, as the empty string is just an empty list and can be denoted by <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
 <p>A string can also span multiple lines:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;&quot;</span>
-<span class="n">This</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">multi</span><span class="o">-</span><span class="n">line</span> <span class="n">literal</span><span class="o">.</span><span class="s2">&quot;&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;</span>
+<span class="n">This</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">multi</span><span class="o">-</span><span class="n">line</span> <span class="n">literal</span> <span class="n">denoting</span> <span class="n">a</span> <span class="n">single</span><span class="o">-</span><span class="n">line</span> <span class="n">string</span><span class="o">.</span>
+<span class="s2">&quot;</span>
 
 <span class="s2">&quot;&quot;</span>
-<span class="n">And</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">a</span>
-<span class="n">multi</span><span class="o">-</span><span class="n">line</span> <span class="n">string</span><span class="o">.</span><span class="s2">&quot;&quot;</span>
+<span class="n">And</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">multi</span><span class="o">-</span><span class="n">line</span> <span class="n">literal</span> <span class="n">denoting</span> <span class="o">...</span>
+<span class="o">...</span> <span class="n">a</span> <span class="s2">&quot;multi-line&quot;</span> <span class="n">string</span><span class="o">.</span>
+<span class="s2">&quot;&quot;</span>
 </pre></div>
 </div>
-<p>In this case, the opening delimiter must be immediately followed by a newline, and every following line must be aligned to it by preceding spaces. The closing delimiter may also appear on a new line. The first and last newlines are ignored when present, as are the aligning spaces:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(uppercase &quot;&quot;
+<p>In this case, the opening delimiter must be immediately followed by a newline, and every following line must be aligned to it by preceding spaces. The first and last newlines are ignored when present, as are the aligning spaces:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(uppercase &quot;
            Help!
            Please!
-           &quot;&quot;)
+           &quot;)
 </pre></div>
 </div>
 <p>Readers may notice that single-line literals cannot begin and end with quotes, as they cannot be distinguished from delimiters. Such strings must be written as multi-line literals:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;&quot;</span>
-<span class="s2">&quot;Hello,&quot;</span> <span class="n">Said</span> <span class="n">the</span> <span class="n">man</span><span class="p">,</span> <span class="s2">&quot;I come in peace.&quot;</span>
-<span class="s2">&quot;&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&quot;Hello,&quot; she said, &quot;I come in peace.&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+\<span class="s2">&quot;&quot;</span><span class="n">Hello</span><span class="p">,</span><span class="s2">&quot; she said, &quot;</span><span class="n">I</span> <span class="n">come</span> <span class="ow">in</span> <span class="n">peace</span><span class="o">.</span><span class="s2">&quot;</span><span class="se">\&quot;</span>
+
+<span class="p">(</span><span class="n">strip</span><span class="o">-</span><span class="n">indent</span>
+  \<span class="s2">&quot;</span><span class="se">\</span>
+<span class="s2">  &quot;</span><span class="n">Hello</span><span class="p">,</span><span class="s2">&quot; she said, &quot;</span><span class="n">I</span> <span class="n">come</span> <span class="ow">in</span> <span class="n">peace</span><span class="o">.</span><span class="s2">&quot;</span>
+  \<span class="s2">&quot;)</span>
 </pre></div>
 </div>
 <p>The choice not to support escape sequences or backslashes is justified by the ease with which strings can be concatenated:</p>
@@ -79,10 +90,38 @@
 
 (cat multiplier &quot; times 2.5 is &quot; (#decimal 2.5 multiplier))
 
-(strip-indent (cat &quot;&quot;\
+\&quot;\multiplier times 2.5 is \(#decimal 2.5 multiplier))
+\&quot;
+
+(escape \ &quot;\multiplier times 2.5 is \(#decimal 2.5 multiplier)\&quot;)
+
+(escape $ &quot;C:\Users\$(name user)\.app\$&quot;)
+
+(escape ( ) &quot;C:\Users\(user-name)\.app\&quot;)
+
+(cat &quot;C:\Users\&quot; (name user) &quot;\.app\&quot;)
+
+&quot;\ \multiplier times 2.5 is \(#decimal 2.5 multiplier)) \&quot;
+
+(unescape
+  \&quot;\
+  This is the first line...
+  ... and this is the second!
+  Here&#39;s a value in quotes: &quot;\(inline-value)&quot;!
+  And now for the final line.
+  \&quot;))
+
+(strip-indent (cat \&quot;\
                    This is the first line...
                    ... and this is the second!
-                   Here&#39;s a value in quotes: &quot;\&quot;&quot; (inline-value) &quot;&quot;\&quot;!
+                   Here&#39;s a value in quotes: &quot;\&quot; (inline-value) \&quot;&quot;!
+                   And now for the final line.
+                   \&quot;))
+
+(strip-indent (cat &quot;&quot;
+                   This is the first line...
+                   ... and this is the second!
+                   Here&#39;s a value in quotes: &quot;&quot;&quot; (inline-value) &quot;&quot;\&quot;!
                    And now for the final line.
                    \&quot;&quot;))
 </pre></div>
@@ -100,7 +139,8 @@ And now for the final line.
 </dl>
 <p>In this example an interpolated value is an escape marker followed by whitespace. We don’t need special syntax to close the interpolated value, we just call “read” on the scanner at that point and it ends where it ends…</p>
 <p>This combination of rules does make it oddly difficult to start a string with slashes…
-“this line is the string proper”</p>
+”
+this line is the string proper”</p>
 </div>
 </div>
 <div class="section" id="strings">
