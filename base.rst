@@ -131,15 +131,15 @@ This could be done by embedding an s-expression in the symbol name, but that see
 
 ``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
 
-Alternatively it could use a custom mapping as appropriate 
+Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.
 
 ``uri:|https://calipto.org/docs|``
 
 ``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
 
-One problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.
+The main problem with this approach appears to be with the reverse process of printing the string.
 
-Another problem is that it's pretty all or nothing, total encapsulation without any API, so it might make e.g. typechecking impossible. For built-ins that's fine, the typechecker will need special knowledge of how to deal with built-ins either way since they aren't possible to express as pure lambdas (that's the point).
+This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can't be done via destructuring on the client side.
 
 Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?
 
