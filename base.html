@@ -139,11 +139,11 @@
 <p>This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|((uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>Alternatively it could use a custom mapping as appropriate</p>
+<p>Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>One problem with this approach is that ad-hoc conversion seems prone to failure and aliasing problems.</p>
-<p>Another problem is that it’s pretty all or nothing, total encapsulation without any API, so it might make e.g. typechecking impossible. For built-ins that’s fine, the typechecker will need special knowledge of how to deal with built-ins either way since they aren’t possible to express as pure lambdas (that’s the point).</p>
+<p>The main problem with this approach appears to be with the reverse process of printing the string.</p>
+<p>This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can’t be done via destructuring on the client side.</p>
 <p>Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?</p>
 <div class="admonition-todo admonition" id="id2">
 <p class="admonition-title">Todo</p>

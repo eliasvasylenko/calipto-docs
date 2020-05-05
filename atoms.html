@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Modules &#8212; Calipto  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
+<p>The module system is designed for a number of important purposes.</p>
+<ul class="simple">
+<li><p>Encapsulation (atomics, exports)</p></li>
+<li><p>Organization (composition via namespacing, separation of concerns &amp; compilation)</p></li>
+<li><p>Composition (namespacing)</p></li>
+<li><p>Dependency Management &amp; Repeatability (content-addressed imports)</p></li>
+</ul>
+<p>The Calipto module system is implemented entirely in normal Calipto code. It does not require any special features or priviliages from the runtime.</p>
+<p>However it does apply additional restrictions on code within the modules which it hosts.</p>
+<div class="section" id="symbol-visibility">
+<h2>Symbol Visibility<a class="headerlink" href="#symbol-visibility" title="Permalink to this headline">¶</a></h2>
+<p>The module system injects modified</p>
+</div>
+<div class="section" id="atomics">
+<h2>Atomics<a class="headerlink" href="#atomics" title="Permalink to this headline">¶</a></h2>
+<p>When we share data from one module to be consumed by others, sometimes we want to protect parts of that data from being read or modified. The way to achieve this in Calipto is with atomics.</p>
+<p>An atom is an <em>indivisible particle</em>. In Calipto, “indivisible” means “unable to be destructured”, and instead of particles of course we’re dealing with data. The obvious example of an atom is a symbol, but the module system also allows a module to export more complex compositions of data as atoms, such that they <em>appear</em> indivisible to other modules.</p>
+<p>There are two sides to atomicity; consider that <code class="docutils literal notranslate"><span class="pre">des</span></code> and <code class="docutils literal notranslate"><span class="pre">cons</span></code> should be symmetric, such that for everything we construct via <code class="docutils literal notranslate"><span class="pre">cons</span></code> we should also be able to destruct it via <code class="docutils literal notranslate"><span class="pre">des</span></code>. We have already defined an <code class="docutils literal notranslate"><span class="pre">atom</span></code> to be a datum which cannot be destructed, and so in turn this must imply that an atom cannot be constructed.</p>
+<p>For the system to be consistent both of these invariants must be enforced. The module system achieves this by injecting modified versions of <code class="docutils literal notranslate"><span class="pre">des</span></code></p>
+<p>To achieve the necessary restrictions on</p>
+<p>To achieve this, every file which is read as a module is injected with modified versions of <code class="docutils literal notranslate"><span class="pre">des</span></code> and <code class="docutils literal notranslate"><span class="pre">atom</span></code> (and possibly <code class="docutils literal notranslate"><span class="pre">cons</span></code>) which respect the atomicity of data exported from other modules.</p>
+</div>
+<div class="section" id="previous-notes">
+<h2>Previous Notes<a class="headerlink" href="#previous-notes" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Organise this document!</p>
+</div>
+<p>To protect structured data is more difficult. There are two possible approaches.</p>
+<ul class="simple">
+<li><p>Our first option is to disallow arbitrary structured data from being constructed by adding an extra <code class="docutils literal notranslate"><span class="pre">fail</span></code> continuation to the signature of <code class="docutils literal notranslate"><span class="pre">cons</span></code> so that we can reject attempts to cons with protected symbols.</p></li>
+<li><p>Our second option is to disallow arbitrary structured data from being destructured, so that we can reject attempts to des with protecte symbols. This has the unfortunate effect of breaking the semantics that we can determine whether something is a cons cell by attempting to des it. It also has the unfortunate (/fortunate?) effect that we can nolonger expect to be able to reflect over all data.</p></li>
+</ul>
+<p>For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. <code class="docutils literal notranslate"><span class="pre">file:///data.txt\0</span></code> is a symbol with the namespace <code class="docutils literal notranslate"><span class="pre">file</span></code> and the name <code class="docutils literal notranslate"><span class="pre">///data.txt\0</span></code> and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.</p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|connection</span> <span class="pre">https://calipto.org</span> <span class="pre">0|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|in</span> <span class="pre">https://calipto.org</span> <span class="pre">0</span> <span class="pre">0|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|out</span> <span class="pre">https://calipto.org</span> <span class="pre">0</span> <span class="pre">0|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:scheme</span></code></p>
+<p>Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.</p>
+<p>This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|((uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
+<p>Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.</p>
+<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>The main problem with this approach appears to be with the reverse process of printing the string. Do we <em>need</em> to be able to do this? If our only use-case is pretty printing output then perhaps we can relax our standards of normalisation and uniqueness of string representations.</p>
+</div>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>Another problem is that it might be possible for an external module to <code class="docutils literal notranslate"><span class="pre">cons</span></code> together a protected form and then be unable to <code class="docutils literal notranslate"><span class="pre">des</span></code> it. These operations should always be symmetric, and we need to think of a way to preserve this property!</p>
+</div>
+<p>This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can’t be done via destructuring on the client side.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Calipto</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">2. Base Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="text.html">3. Text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="text.html#representation">4. Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="text.html#layout">5. Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numerics.html">6. Numerics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sexup.html">7. Markup</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Elias N Vasylenko.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/atoms.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
