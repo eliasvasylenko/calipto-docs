@@ -8,11 +8,8 @@ Continuation-Passing/Direct Style
 
 Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it's a value of a unit type like void), and expressions can be composed by passing arguments to functions. The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control automatically returning to the caller when a function completes, each function explicitly passes along control by calling another function.
 
-Primitives
-----------
-
-Data
-~~~~
+Primitive Data
+--------------
 
 There are only two fundamental primitive types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.
 
@@ -43,8 +40,8 @@ This reflects how lists are typically represented in Calipto; the empty list is 
 - ``(first second)`` is equivalent to ``(first second . nil)`` is equivalent to ``(first . (second . ()))``, and is a proper list with two elements.
 - ``(first second . terminal)`` is equivalent to ``(first . (second . terminal))``, and is an improper list with two elements.
 
-Functions
-~~~~~~~~~
+Primitive Functions
+-------------------
 
 Primitive functions are those which cannot be implemented on top of other functions and so must be provided by the platform. Some of them are required to be provided by all platforms, some are optional modulo underlying system capabilities and permissions.
 :
@@ -56,8 +53,37 @@ Primitive functions are those which cannot be implemented on top of other functi
 - ``(random:choose-nondet a b)`` Make a non-deterministic choice. One of the two functions ``a`` and ``b`` is chosen at the discretion of the compiler or runtime---with no requirements regarding probability---and then called with no arguments. This may seem like a perculiar inclusion in the set of primitives, but careful application of this function allows a platform with special knowledge of it to make certain optimisations and use certain data-structures that appear non-deterministic, without violating the surface semantics of the language.
 - ``(random:choose a b)`` Make a (possibly-pseudo)random choice. One of the two functions ``a`` and ``b`` is chosen at random and then called with no arguments.
 
+Functional Side Effects
+~~~~~~~~~~~~~~~~~~~~~~~
+
+IO is inherently stateful and side effecting, so how do we model that with an API which behaves functionally? This is a problem many programming languages have wrestled with in different ways. Some isolate side effects with monads, while some enforce single-use of side-effecting functions with linear types.
+
+But there is already way to achieve functional side effects in CPS which is perfectly natural, and it does not require any complex static type checking or new programming abstractions. Every time a side-effecting builtin function is called, it remembers the arguments it received and its result, then when it is called again it can give the same results for the same arguments. When the function returns, it passes a new version of itself to the continuation, which can be used to perform another side effect against the resulting state.
+
+When we have an input function, such as e.g. ``scan-stdin``, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.
+
+When we have an output function, such as e.g. ``print-stdout``, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.
+
+What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn't been reached yet the system won't know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.
+
+If we are only permitted to reference symbols from a given namespace if they're explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.
+
+.. note::
+
+  At a higher level we will introduce a comprehensive system of side effect handlers and performers in order to properly partition pure and impure code. But this system is implemented at the library level and so our base language needs to operate on some other model.
+
+.. todo::
+
+  Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all "exits" from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?
+
+.. seealso::
+
+  https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf
+  https://core.ac.uk/download/pdf/82009715.pdf
+  https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf
+
 Special Forms
-~~~~~~~~~~~~~
+-------------
 
 Special forms are not functions and don't behave as such. This means that they do not follow the continuation-passing style; instead they behave like expressions, evaluating directly to their result. This makes them easy to distinguish from functions based on where they appear in code.
 
@@ -88,67 +114,3 @@ Special forms are not functions and don't behave as such. This means that they d
 - ``(env name k)`` Get an environment variable
 - ``(args k)`` Get the program arguments
 
-Functional Side Effects
-~~~~~~~~~~~~~~~~~~~~~~~
-
-How do we make our IO functional? IO is inherently stateful and side effecting, how do we model that with an API that behaves functionally? Some languages do this with monads. Our equivalent model of a stack of side effect handlers can achieve the same thing, but this is implemented at the library level and so our base language needs to operate on some other model.
-
-There is a way of doing this which is natural in CPS! Though there are caveats which complicate it in practice in a language without visibility protection.
-
-When we have an input function, such as e.g. ``scan-stdin``, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.
-
-When we have an output function, such as e.g. ``print-stdout``, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.
-
-What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn't been reached yet the system won't know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.
-
-If we are only permitted to reference symbols from a given namespace if they're explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.
-
-To protect structured data is more difficult. There are two possible approaches.
-
-- Our first option is to disallow arbitrary structured data from being constructed by adding an extra ``fail`` continuation to the signature of ``cons`` so that we can reject attempts to cons with protected symbols.
-  
-- Our second option is to disallow arbitrary structured data from being destructured, so that we can reject attempts to des with protecte symbols. This has the unfortunate effect of breaking the semantics that we can determine whether something is a cons cell by attempting to des it. It also has the unfortunate (/fortunate?) effect that we can nolonger expect to be able to reflect over all data. 
-
-For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. ``file:///data.txt\0`` is a symbol with the namespace ``file`` and the name ``///data.txt\0`` and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.
-
-``uri:|https://calipto.org|``
-
-``uri:|https://calipto.org|``
-
-``uri:|connection https://calipto.org 0|``
-
-``uri:|in https://calipto.org 0 0|``
-
-``uri:|out https://calipto.org 0 0|``
-
-``uri:scheme``
-
-Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.
-
-This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.
-
-``uri:|((uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))|``
-
-``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
-
-Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.
-
-``uri:|https://calipto.org/docs|``
-
-``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
-
-The main problem with this approach appears to be with the reverse process of printing the string.
-
-This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can't be done via destructuring on the client side.
-
-Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?
-
-.. todo::
-
-  Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all "exits" from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?
-
-.. seealso::
-
-  https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf
-  https://core.ac.uk/download/pdf/82009715.pdf
-  https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf
