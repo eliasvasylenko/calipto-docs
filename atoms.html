@@ -32,39 +32,56 @@
             
   <div class="section" id="modules">
 <h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
-<p>The module system is designed for a number of important purposes.</p>
+<p>A good module system should address a number of interconnected concerns;</p>
 <ul class="simple">
-<li><p>Encapsulation (atomics, exports)</p></li>
-<li><p>Organization (composition via namespacing, separation of concerns &amp; compilation)</p></li>
-<li><p>Composition (namespacing)</p></li>
-<li><p>Dependency Management &amp; Repeatability (content-addressed imports)</p></li>
+<li><p>Encapsulation (atomics, exports),</p></li>
+<li><p>Organization (composition via namespacing, separation of concerns &amp; compilation),</p></li>
+<li><p>Composition (namespacing),</p></li>
+<li><p>Dependency Management &amp; Repeatability (content-addressed imports).</p></li>
 </ul>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
 <p>The Calipto module system is implemented entirely in normal Calipto code. It does not require any special features or priviliages from the runtime.</p>
 <p>However it does apply additional restrictions on code within the modules which it hosts.</p>
+</div>
 <div class="section" id="symbol-visibility">
 <h2>Symbol Visibility<a class="headerlink" href="#symbol-visibility" title="Permalink to this headline">¶</a></h2>
-<p>The module system injects modified</p>
+<p>The module system injects a restricted reader implementation into hosted modules such that they are only able to read symbols which are visible to them via their imports.</p>
 </div>
 <div class="section" id="atomics">
 <h2>Atomics<a class="headerlink" href="#atomics" title="Permalink to this headline">¶</a></h2>
 <p>When we share data from one module to be consumed by others, sometimes we want to protect parts of that data from being read or modified. The way to achieve this in Calipto is with atomics.</p>
-<p>An atom is an <em>indivisible particle</em>. In Calipto, “indivisible” means “unable to be destructured”, and instead of particles of course we’re dealing with data. The obvious example of an atom is a symbol, but the module system also allows a module to export more complex compositions of data as atoms, such that they <em>appear</em> indivisible to other modules.</p>
-<p>There are two sides to atomicity; consider that <code class="docutils literal notranslate"><span class="pre">des</span></code> and <code class="docutils literal notranslate"><span class="pre">cons</span></code> should be symmetric, such that for everything we construct via <code class="docutils literal notranslate"><span class="pre">cons</span></code> we should also be able to destruct it via <code class="docutils literal notranslate"><span class="pre">des</span></code>. We have already defined an <code class="docutils literal notranslate"><span class="pre">atom</span></code> to be a datum which cannot be destructed, and so in turn this must imply that an atom cannot be constructed.</p>
-<p>For the system to be consistent both of these invariants must be enforced. The module system achieves this by injecting modified versions of <code class="docutils literal notranslate"><span class="pre">des</span></code></p>
-<p>To achieve the necessary restrictions on</p>
-<p>To achieve this, every file which is read as a module is injected with modified versions of <code class="docutils literal notranslate"><span class="pre">des</span></code> and <code class="docutils literal notranslate"><span class="pre">atom</span></code> (and possibly <code class="docutils literal notranslate"><span class="pre">cons</span></code>) which respect the atomicity of data exported from other modules.</p>
+<p>An atom is for most purposes an <em>indivisible particle</em>. In Calipto, “indivisible” means “unable to be destructed”, and instead of particles of course we’re dealing with data. The obvious example of an atom is a symbol, but the module system also allows a module to export more complex compositions of data as atoms, such that they <em>appear</em> indivisible to other modules.</p>
+<p>There are two sides to atomicity; consider that <code class="docutils literal notranslate"><span class="pre">des</span></code> and <code class="docutils literal notranslate"><span class="pre">cons</span></code> should be symmetric, such that for everything we construct via <code class="docutils literal notranslate"><span class="pre">cons</span></code> we should also be able to destruct it via <code class="docutils literal notranslate"><span class="pre">des</span></code>. We have already defined an <code class="docutils literal notranslate"><span class="pre">atom</span></code> to be a datum which cannot be destructed outside of its owning module, and so in turn this must imply that an atom cannot be constructed outside of its owning module.</p>
+<p>There are two ways we could protect a datum from construction; by modifying <code class="docutils literal notranslate"><span class="pre">cons</span></code> to be a partial function, or by restricting access to one of the components. Calipto takes the latter option, so as to preserve the desirable property that <code class="docutils literal notranslate"><span class="pre">cons</span></code> is total:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(module my-atoms)
+(let a (form-atom (protons neutrons))
+  (print a) ; (atom my-atoms (protons neutrons))
+  (des a) ; fails to destruct &#39;a&#39;!
+  (cons atom (protons neutrons)) ; fails to read &#39;atom&#39;!
+  (split-atom a)) ; succeeds, only within the same module
+</pre></div>
+</div>
+<p>To achieve this, every file which is read as a module is injected with a modified version of <code class="docutils literal notranslate"><span class="pre">des</span></code>, along with the modified version of <code class="docutils literal notranslate"><span class="pre">read-symbol</span></code> which protects lookup of certain symbols.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Every atomic cons cell must be identified by a “marker symbol” in the car position. Should this marker symbol be the same every time (module:atom?). This makes things easier for two reasons;</p>
+<ul class="simple">
+<li><p>Faster to check whether something is an atom (and we can des) against only a single “blessed” symbol.</p></li>
+<li><p>There is only one symbol which we must protect from being created or exported and it is owned by the module system.</p></li>
+</ul>
+<p>It would be nice if we could designate any symbol to be an atomic marker, but this would slow down des checking (special casing to put an “atomic” bit on the data could alleviate this, but its nice to have performance <em>without</em> special-casing where possible. It should however be possible to statically eliminate this check in most places so perhaps that is sufficient).</p>
+<p>This would also mean that the module system must ensure that the marker symbol is not exported from a module, and also that it can never escape by being returned from functions, etc. etc. This could be hard, but there are probably tricks to get there by modifying cons etc. to detect changes.</p>
+<p>Alternatively there is a possible middle ground, to say that any symbol in the <code class="docutils literal notranslate"><span class="pre">atom</span></code> namespace is an atomic marker and also inaccessible, e.g. <code class="docutils literal notranslate"><span class="pre">atom:int</span></code>, <code class="docutils literal notranslate"><span class="pre">atom:builtin</span></code>, etc.</p>
+</div>
 </div>
 <div class="section" id="previous-notes">
 <h2>Previous Notes<a class="headerlink" href="#previous-notes" title="Permalink to this headline">¶</a></h2>
-<div class="admonition-todo admonition" id="id1">
+<div class="admonition-todo admonition" id="id2">
 <p class="admonition-title">Todo</p>
 <p>Organise this document!</p>
 </div>
 <p>To protect structured data is more difficult. There are two possible approaches.</p>
-<ul class="simple">
-<li><p>Our first option is to disallow arbitrary structured data from being constructed by adding an extra <code class="docutils literal notranslate"><span class="pre">fail</span></code> continuation to the signature of <code class="docutils literal notranslate"><span class="pre">cons</span></code> so that we can reject attempts to cons with protected symbols.</p></li>
-<li><p>Our second option is to disallow arbitrary structured data from being destructured, so that we can reject attempts to des with protecte symbols. This has the unfortunate effect of breaking the semantics that we can determine whether something is a cons cell by attempting to des it. It also has the unfortunate (/fortunate?) effect that we can nolonger expect to be able to reflect over all data.</p></li>
-</ul>
 <p>For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. <code class="docutils literal notranslate"><span class="pre">file:///data.txt\0</span></code> is a symbol with the namespace <code class="docutils literal notranslate"><span class="pre">file</span></code> and the name <code class="docutils literal notranslate"><span class="pre">///data.txt\0</span></code> and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
@@ -79,11 +96,11 @@
 <p>Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<div class="admonition-todo admonition" id="id2">
+<div class="admonition-todo admonition" id="id3">
 <p class="admonition-title">Todo</p>
 <p>The main problem with this approach appears to be with the reverse process of printing the string. Do we <em>need</em> to be able to do this? If our only use-case is pretty printing output then perhaps we can relax our standards of normalisation and uniqueness of string representations.</p>
 </div>
-<div class="admonition-todo admonition" id="id3">
+<div class="admonition-todo admonition" id="id4">
 <p class="admonition-title">Todo</p>
 <p>Another problem is that it might be possible for an external module to <code class="docutils literal notranslate"><span class="pre">cons</span></code> together a protected form and then be unable to <code class="docutils literal notranslate"><span class="pre">des</span></code> it. These operations should always be symmetric, and we need to think of a way to preserve this property!</p>
 </div>
