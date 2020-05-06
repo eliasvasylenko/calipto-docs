@@ -19,6 +19,11 @@ The Calipto module system is implemented entirely in normal Calipto code. It doe
 
 However it does apply additional restrictions on code within the modules which it hosts.
 
+Content Addressing
+------------------
+
+
+
 Symbol Visibility
 -----------------
 
@@ -95,13 +100,13 @@ Though more generally using the scanner/reader/macro system to parse the string 
 
 ``(uri:uri (uri:scheme https) (uri:authority (uri:host "calipto.org")) (uri:path "/docs"))``
 
-.. TODO::
+.. todo::
 
   The main problem with this approach appears to be with the reverse process of printing the string. Do we *need* to be able to do this? If our only use-case is pretty printing output then perhaps we can relax our standards of normalisation and uniqueness of string representations.
 
-.. TODO::
+.. todo::
 
   Another problem is that it might be possible for an external module to ``cons`` together a protected form and then be unable to ``des`` it. These operations should always be symmetric, and we need to think of a way to preserve this property!
 
-This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can't be done via destructuring on the client side.
+This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can't be done via destructuring on the client side. This is a good thing! We shouldn't be able to typecheck over hidden data such as passwords.
 

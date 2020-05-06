@@ -44,6 +44,9 @@
 <p>The Calipto module system is implemented entirely in normal Calipto code. It does not require any special features or priviliages from the runtime.</p>
 <p>However it does apply additional restrictions on code within the modules which it hosts.</p>
 </div>
+<div class="section" id="content-addressing">
+<h2>Content Addressing<a class="headerlink" href="#content-addressing" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="symbol-visibility">
 <h2>Symbol Visibility<a class="headerlink" href="#symbol-visibility" title="Permalink to this headline">¶</a></h2>
 <p>The module system injects a restricted reader implementation into hosted modules such that they are only able to read symbols which are visible to them via their imports.</p>
@@ -104,7 +107,7 @@
 <p class="admonition-title">Todo</p>
 <p>Another problem is that it might be possible for an external module to <code class="docutils literal notranslate"><span class="pre">cons</span></code> together a protected form and then be unable to <code class="docutils literal notranslate"><span class="pre">des</span></code> it. These operations should always be symmetric, and we need to think of a way to preserve this property!</p>
 </div>
-<p>This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can’t be done via destructuring on the client side.</p>
+<p>This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can’t be done via destructuring on the client side. This is a good thing! We shouldn’t be able to typecheck over hidden data such as passwords.</p>
 </div>
 </div>
 

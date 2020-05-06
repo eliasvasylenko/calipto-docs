@@ -39,10 +39,8 @@
 <h2>2.1. Continuation-Passing/Direct Style<a class="headerlink" href="#continuation-passing-direct-style" title="Permalink to this headline">¶</a></h2>
 <p>Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it’s a value of a unit type like void), and expressions can be composed by passing arguments to functions. The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control automatically returning to the caller when a function completes, each function explicitly passes along control by calling another function.</p>
 </div>
-<div class="section" id="primitives">
-<h2>2.2. Primitives<a class="headerlink" href="#primitives" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="data">
-<h3>2.2.1. Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="primitive-data">
+<h2>2.2. Primitive Data<a class="headerlink" href="#primitive-data" title="Permalink to this headline">¶</a></h2>
 <p>There are only two fundamental primitive types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
 <p>It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.</p>
 <p>A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with <code class="docutils literal notranslate"><span class="pre">:</span></code>, though in some circumstances the namespace may be inferred from context in which case the <code class="docutils literal notranslate"><span class="pre">:</span></code> should be omitted. Here are some examples of formatted symbols:</p>
@@ -70,8 +68,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">second</span> <span class="pre">.</span> <span class="pre">terminal)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">.</span> <span class="pre">(second</span> <span class="pre">.</span> <span class="pre">terminal))</span></code>, and is an improper list with two elements.</p></li>
 </ul>
 </div>
-<div class="section" id="functions">
-<h3>2.2.2. Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="primitive-functions">
+<h2>2.3. Primitive Functions<a class="headerlink" href="#primitive-functions" title="Permalink to this headline">¶</a></h2>
 <p>Primitive functions are those which cannot be implemented on top of other functions and so must be provided by the platform. Some of them are required to be provided by all platforms, some are optional modulo underlying system capabilities and permissions.
 :
 - <code class="docutils literal notranslate"><span class="pre">(data:cons</span> <span class="pre">car</span> <span class="pre">cdr</span> <span class="pre">k)</span></code> Create a cons cell. The value of <code class="docutils literal notranslate"><span class="pre">car</span></code> is “consed onto” the value of <code class="docutils literal notranslate"><span class="pre">cdr</span></code>, and the resulting cons cell is passed to the function <code class="docutils literal notranslate"><span class="pre">k</span></code>.
@@ -82,9 +80,32 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">(random:choose-nondet</span> <span class="pre">a</span> <span class="pre">b)</span></code> Make a non-deterministic choice. One of the two functions <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> is chosen at the discretion of the compiler or runtime—with no requirements regarding probability—and then called with no arguments. This may seem like a perculiar inclusion in the set of primitives, but careful application of this function allows a platform with special knowledge of it to make certain optimisations and use certain data-structures that appear non-deterministic, without violating the surface semantics of the language.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(random:choose</span> <span class="pre">a</span> <span class="pre">b)</span></code> Make a (possibly-pseudo)random choice. One of the two functions <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> is chosen at random and then called with no arguments.</p></li>
 </ul>
+<div class="section" id="functional-side-effects">
+<h3>2.3.1. Functional Side Effects<a class="headerlink" href="#functional-side-effects" title="Permalink to this headline">¶</a></h3>
+<p>IO is inherently stateful and side effecting, so how do we model that with an API which behaves functionally? This is a problem many programming languages have wrestled with in different ways. Some isolate side effects with monads, while some enforce single-use of side-effecting functions with linear types.</p>
+<p>But there is already way to achieve functional side effects in CPS which is perfectly natural, and it does not require any complex static type checking or new programming abstractions. Every time a side-effecting builtin function is called, it remembers the arguments it received and its result, then when it is called again it can give the same results for the same arguments. When the function returns, it passes a new version of itself to the continuation, which can be used to perform another side effect against the resulting state.</p>
+<p>When we have an input function, such as e.g. <code class="docutils literal notranslate"><span class="pre">scan-stdin</span></code>, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.</p>
+<p>When we have an output function, such as e.g. <code class="docutils literal notranslate"><span class="pre">print-stdout</span></code>, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.</p>
+<p>What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn’t been reached yet the system won’t know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.</p>
+<p>If we are only permitted to reference symbols from a given namespace if they’re explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At a higher level we will introduce a comprehensive system of side effect handlers and performers in order to properly partition pure and impure code. But this system is implemented at the library level and so our base language needs to operate on some other model.</p>
+</div>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all “exits” from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf">https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf</a>
+<a class="reference external" href="https://core.ac.uk/download/pdf/82009715.pdf">https://core.ac.uk/download/pdf/82009715.pdf</a>
+<a class="reference external" href="https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf">https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf</a></p>
+</div>
+</div>
 </div>
 <div class="section" id="special-forms">
-<h3>2.2.3. Special Forms<a class="headerlink" href="#special-forms" title="Permalink to this headline">¶</a></h3>
+<h2>2.4. Special Forms<a class="headerlink" href="#special-forms" title="Permalink to this headline">¶</a></h2>
 <p>Special forms are not functions and don’t behave as such. This means that they do not follow the continuation-passing style; instead they behave like expressions, evaluating directly to their result. This makes them easy to distinguish from functions based on where they appear in code.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">(data:quote</span> <span class="pre">a)</span></code> Evaluates to the datum <code class="docutils literal notranslate"><span class="pre">a</span></code>, without attempting to evaluate it.</p></li>
@@ -98,7 +119,7 @@
 <p class="admonition-title">Note</p>
 <p>Readers familiar with the quasiquote macro—which is taken from Lisp—might ask why the quote special form doesn’t allow unquoting. After all, the lambda special form already performs a similar trick when it captures local scope. The difference is that quasiquote is not a fundamental primitive; it can be implemented via <code class="docutils literal notranslate"><span class="pre">data:quote</span></code> and <code class="docutils literal notranslate"><span class="pre">data:cons</span></code>. The set of special forms is intended to be minimal and should not be burdened with unecessary complexity.</p>
 </div>
-<div class="admonition-todo admonition" id="id1">
+<div class="admonition-todo admonition" id="id2">
 <p class="admonition-title">Todo</p>
 <p>Look into options for PRNGs, TRNGs, CSPRNGs. Rather than a global generator, do we want to create handles to generators like resources, that way we can create the same sequence by deliberately reusing the same seed, which is sometimes useful. How much can this be self-hosted? A PRNG can just be implemented in the language, it’s perhaps only the choice of seed which is important to be externalised to a primitive.</p>
 </div>
@@ -114,48 +135,6 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">(env</span> <span class="pre">name</span> <span class="pre">k)</span></code> Get an environment variable</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(args</span> <span class="pre">k)</span></code> Get the program arguments</p></li>
 </ul>
-</div>
-<div class="section" id="functional-side-effects">
-<h3>2.2.4. Functional Side Effects<a class="headerlink" href="#functional-side-effects" title="Permalink to this headline">¶</a></h3>
-<p>How do we make our IO functional? IO is inherently stateful and side effecting, how do we model that with an API that behaves functionally? Some languages do this with monads. Our equivalent model of a stack of side effect handlers can achieve the same thing, but this is implemented at the library level and so our base language needs to operate on some other model.</p>
-<p>There is a way of doing this which is natural in CPS! Though there are caveats which complicate it in practice in a language without visibility protection.</p>
-<p>When we have an input function, such as e.g. <code class="docutils literal notranslate"><span class="pre">scan-stdin</span></code>, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.</p>
-<p>When we have an output function, such as e.g. <code class="docutils literal notranslate"><span class="pre">print-stdout</span></code>, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.</p>
-<p>What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn’t been reached yet the system won’t know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.</p>
-<p>If we are only permitted to reference symbols from a given namespace if they’re explicitly exported from the owning module then we can prevent such attempts to circumvent safety. This means that functional IO functions must be represented by a single symbol and their behaviour must be special-cased by the interpreter or runtime.</p>
-<p>To protect structured data is more difficult. There are two possible approaches.</p>
-<ul class="simple">
-<li><p>Our first option is to disallow arbitrary structured data from being constructed by adding an extra <code class="docutils literal notranslate"><span class="pre">fail</span></code> continuation to the signature of <code class="docutils literal notranslate"><span class="pre">cons</span></code> so that we can reject attempts to cons with protected symbols.</p></li>
-<li><p>Our second option is to disallow arbitrary structured data from being destructured, so that we can reject attempts to des with protecte symbols. This has the unfortunate effect of breaking the semantics that we can determine whether something is a cons cell by attempting to des it. It also has the unfortunate (/fortunate?) effect that we can nolonger expect to be able to reflect over all data.</p></li>
-</ul>
-<p>For files/URLs the symbol name of the function could be an actual URL. Perhaps we could even reuse the protocol as the namespace since the formatting is similar, e.g. <code class="docutils literal notranslate"><span class="pre">file:///data.txt\0</span></code> is a symbol with the namespace <code class="docutils literal notranslate"><span class="pre">file</span></code> and the name <code class="docutils literal notranslate"><span class="pre">///data.txt\0</span></code> and is formatted as a file URL appended with a dash and the operation count. This way operations for protocols are automatically properly namespaced. But collisions between protocols and unrelated modules seem likely.</p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|connection</span> <span class="pre">https://calipto.org</span> <span class="pre">0|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|in</span> <span class="pre">https://calipto.org</span> <span class="pre">0</span> <span class="pre">0|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|out</span> <span class="pre">https://calipto.org</span> <span class="pre">0</span> <span class="pre">0|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:scheme</span></code></p>
-<p>Perhaps there can be some mechanism by which to export structures AS symbols, where a symbol must map uniquely to a structure and vice versa. This would be a way to hide access to a structure without perverting the data model.</p>
-<p>This could be done by embedding an s-expression in the symbol name, but that seems a little awkward as it has to deal with escapes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|((uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>Though more generally using the scanner/reader/macro system to parse the string would allow other syntax.</p>
-<p><code class="docutils literal notranslate"><span class="pre">uri:|https://calipto.org/docs|</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">(uri:uri</span> <span class="pre">(uri:scheme</span> <span class="pre">https)</span> <span class="pre">(uri:authority</span> <span class="pre">(uri:host</span> <span class="pre">&quot;calipto.org&quot;))</span> <span class="pre">(uri:path</span> <span class="pre">&quot;/docs&quot;))</span></code></p>
-<p>The main problem with this approach appears to be with the reverse process of printing the string.</p>
-<p>This is total encapsulation and means that no information can escape unless there is API on the module for it. Typechecking the internals of an atom is still possible if there are functions in the defining module to facilitate the checks, though it can’t be done via destructuring on the client side.</p>
-<p>Is it okay for a datum to look like a symbol to one module and look like a structure to another with transparent conversion between representations? Or would it be better to convert manually?</p>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>Do we want to try to enforce safe resource management with the design of these primitives? This typically means that resources must be closed when they leave scope, but that would seem to be difficult to enforce when there is no clearly defined stack by which to determine scope. Perhaps such restrictions should be the domain of language extensions. Can we use the type system to make sure all “exits” from the section in which a resource is acquired proceed via the associated release function? Do we need a way to represent the stack in the type system in order to achieve this? Or linear types?</p>
-</div>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference external" href="https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf">https://pdfs.semanticscholar.org/9543/279e307892681034afcdf9df863bee90eb42.pdf</a>
-<a class="reference external" href="https://core.ac.uk/download/pdf/82009715.pdf">https://core.ac.uk/download/pdf/82009715.pdf</a>
-<a class="reference external" href="https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf">https://www.cs.bham.ac.uk/~hxt/research/LinCP.pdf</a></p>
-</div>
-</div>
 </div>
 </div>
 
@@ -181,7 +160,9 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">2. Base Language</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#continuation-passing-direct-style">2.1. Continuation-Passing/Direct Style</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#primitives">2.2. Primitives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#primitive-data">2.2. Primitive Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#primitive-functions">2.3. Primitive Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#special-forms">2.4. Special Forms</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="text.html">3. Text</a></li>
