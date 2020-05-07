@@ -1,11 +1,11 @@
 Introduction
 ============
 
-.. warning:: This documentation is a work in progress and not a faithful representation of implemented features; parts of it may be incomplete, outdated, or aspirational in nature.
-
 Calipto is a language-oriented programming language.
 
-At its core it is a tiny functional language which acts as a sort of human-readable IR. By itself this language is flexible, but it is not particularly ergonomic; the magic lies in its *metaprogramming* facilities.
+At its core it is a tiny functional language which acts as a sort of human-readable IR. By itself this language is flexible, but it is not particularly usable; the magic lies in its *metaprogramming* facilities, from which more sophisticated and ergonomic language features are bootstrapped.
+
+It is often important to distinguish between the core language and the derived language, with all the bells and whistles. In this document, "Calipto" will refer to the latter, and references to the former will be explicitly qualified, for instance "Calipto core".
 
 Compiler
 --------
