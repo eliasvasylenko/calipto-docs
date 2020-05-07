@@ -1,7 +1,14 @@
-Define
-======
+Scope
+=====
 
-The ``define`` macro binds a value to a name in the current lexical context. In the simplest case it is easy to see how this works::
+Calipto core is lexically scoped. Names are bound to values by way of function application.
+
+Macros in Calipto are hygienic, but it is important to understand how scoping rules interact with macro expansion.
+
+Define
+------
+
+The ``define`` macro binds a value to a name . In the simplest case it is easy to see how this works::
 
   (define greeting "Hello")
 
@@ -14,8 +21,7 @@ Defines do not have to appear at the root of a source file, they can be nested w
 
   (define 
 
-.. TODO::
-  
+.. todo::
   Or should they be static and not permit capture?
 
 The a defined value is not fully resolved until it is used, and is permitted to mention unbound symbols. But these symbols must all be defined before the value is used. This allows for mutual recursion::

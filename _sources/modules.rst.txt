@@ -19,10 +19,13 @@ The Calipto module system is implemented entirely in normal Calipto code. It doe
 
 However it does apply additional restrictions on code within the modules which it hosts.
 
+Qualified Symbols
+-----------------
+
 Content Addressing
 ------------------
 
-
+Exports and imports are content-addressed by hash.
 
 Symbol Visibility
 -----------------
@@ -41,15 +44,24 @@ There are two sides to atomicity; consider that ``des`` and ``cons`` should be s
 There are two ways we could protect a datum from construction; by modifying ``cons`` to be a partial function, or by restricting access to one of the components. Calipto takes the latter option, so as to preserve the desirable property that ``cons`` is total::
 
   (module my-atoms)
-  (let a (form-atom (protons neutrons))
-    (print a) ; (atom my-atoms (protons neutrons))
-    (des a) ; fails to destruct 'a'!
-    (cons atom (protons neutrons)) ; fails to read 'atom'!
-    (split-atom a)) ; succeeds, only within the same module
+
+  (define a (form-atom (protons neutrons)))
+
+  (print a)
+  ;> (atom my-atoms (protons neutrons))
+
+  (des a)
+  ;> error, attempt to destruct atom
+
+  (cons atom (protons neutrons))
+  ;> error, unable to read symbol 'atom'
+
+  (print (split-atom a))
+  ;> (protons neutrons)
 
 To achieve this, every file which is read as a module is injected with a modified version of ``des``, along with the modified version of ``read-symbol`` which protects lookup of certain symbols.
 
-.. TODO::
+.. todo::
 
   Every atomic cons cell must be identified by a "marker symbol" in the car position. Should this marker symbol be the same every time (module:atom?). This makes things easier for two reasons;
 
@@ -57,16 +69,16 @@ To achieve this, every file which is read as a module is injected with a modifie
 
   - There is only one symbol which we must protect from being created or exported and it is owned by the module system.
 
-  It would be nice if we could designate any symbol to be an atomic marker, but this would slow down des checking (special casing to put an "atomic" bit on the data could alleviate this, but its nice to have performance *without* special-casing where possible. It should however be possible to statically eliminate this check in most places so perhaps that is sufficient). 
+  It would be nice if we could designate any symbol to be an atomic marker, but this would slow down des checking (special casing to put an "atomic" bit on the data could alleviate this, but its nice to have performance *without* special-casing where possible. It should however be possible to statically eliminate this check in many places so perhaps that is sufficient). 
   
   This would also mean that the module system must ensure that the marker symbol is not exported from a module, and also that it can never escape by being returned from functions, etc. etc. This could be hard, but there are probably tricks to get there by modifying cons etc. to detect changes.
 
-  Alternatively there is a possible middle ground, to say that any symbol in the ``atom`` namespace is an atomic marker and also inaccessible, e.g. ``atom:int``, ``atom:builtin``, etc.
+  Alternatively there is a possible middle ground, to say that any symbol in the ``atom`` namespace is an atomic marker and also inaccessible, e.g. ``atom:int``, ``atom:builtin``, etc. But do symbols even *have* namespaces or is a qualified name just another abstraction composed into an atom?
 
 Previous Notes
 --------------
 
-.. TODO::
+.. todo::
  
   Organise this document!
 

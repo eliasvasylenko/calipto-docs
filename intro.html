@@ -34,12 +34,9 @@
             
   <div class="section" id="introduction">
 <h1>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This documentation is a work in progress and not a faithful representation of implemented features; parts of it may be incomplete, outdated, or aspirational in nature.</p>
-</div>
 <p>Calipto is a language-oriented programming language.</p>
-<p>At its core it is a tiny functional language which acts as a sort of human-readable IR. By itself this language is flexible, but it is not particularly ergonomic; the magic lies in its <em>metaprogramming</em> facilities.</p>
+<p>At its core it is a tiny functional language which acts as a sort of human-readable IR. By itself this language is flexible, but it is not particularly usable; the magic lies in its <em>metaprogramming</em> facilities, from which more sophisticated and ergonomic language features are bootstrapped.</p>
+<p>It is often important to distinguish between the core language and the derived language, with all the bells and whistles. In this document, “Calipto” will refer to the latter, and references to the former will be explicitly qualified, for instance “Calipto core”.</p>
 <div class="section" id="compiler">
 <h2>1.1. Compiler<a class="headerlink" href="#compiler" title="Permalink to this headline">¶</a></h2>
 <p>The Calipto compiler is essentially nothing more than a simple macro expander, but from this carefully-designed interface we can bootstrap almost any kind of compiler and runtime that can be imagined; from document generators for markup languages, to parser generators for grammar specifications, to fully fledged programming language runtimes. And all without sacrificing performance!</p>
