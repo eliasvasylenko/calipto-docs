@@ -22,6 +22,8 @@ However it does apply additional restrictions on code within the modules which i
 Qualified Symbols
 -----------------
 
+Module names can just be symbols. Probably also a good idea to (optionally?) namespace by organisation / user so as to avoid collisions.
+
 Content Addressing
 ------------------
 

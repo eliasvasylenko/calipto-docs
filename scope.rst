@@ -5,6 +5,23 @@ Calipto core is lexically scoped. Names are bound to values by way of function a
 
 Macros in Calipto are hygienic, but it is important to understand how scoping rules interact with macro expansion.
 
+Variable Names
+--------------
+
+Variable names in Calipto are not just symbols, they are *lists of symbols*. This allows them to be qualified with enough information to uniquly identify them. The scanner generally adds the necessary qualifiers to raw symbols transparently. This is how we maintain hygiene in Calipto.
+
+.. todo::
+  Perhaps qualified names must be atoms with a special namespace, say ``qualified-name``. This way we have a single place where they are created and we can intern them (and generate their hashes ahead of time?) as an optimisation, which means they're no slower to use in practice than normal symbols.
+
+Macros are free to try to create their own qualified names by decorating the reader, but it will be an error if they're not unique within the source file. For instance a default lambda macro may choose to qualify parameters with the function name, source position, and source file. The module system may choose to qualify imports by content hash to guarantee uniqueness.
+
+Way to parse qualified names? ``calipto.org:builtin:stdin`` ``|file:///home/user/script.cal|:(line 1000):x``.
+
+Perhaps we can leave out parts we don't need?
+
+.. todo::
+  In the runtime the extra info embedded in the variable name doesn't too-badly affect size or speed as variables can be interned and generally treated as opaque pointers. But what if we want to compile and output IR? A dumb printer will duplicate the full qualified names of everything at every single use-site, which could be a huge increase in footprint. Especially with e.g. giant content hashes sprinkled everywhere!
+
 Define
 ------
 
