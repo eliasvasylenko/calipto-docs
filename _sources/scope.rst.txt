@@ -8,12 +8,14 @@ Macros in Calipto are hygienic, but it is important to understand how scoping ru
 Variable Names
 --------------
 
-Variable names in Calipto are not just symbols, they are *lists of symbols*. This allows them to be qualified with enough information to uniquly identify them. The scanner generally adds the necessary qualifiers to raw symbols transparently. This is how we maintain hygiene in Calipto.
+Variable names in Calipto are not just symbols, they are *any atom*. This allows them to be qualified with enough information to uniquly identify them. The scanner generally adds the necessary qualifiers to raw symbols transparently. This is how we maintain hygiene in Calipto.
 
 .. todo::
   Perhaps qualified names must be atoms with a special namespace, say ``qualified-name``. This way we have a single place where they are created and we can intern them (and generate their hashes ahead of time?) as an optimisation, which means they're no slower to use in practice than normal symbols.
 
-Macros are free to try to create their own qualified names by decorating the reader, but it will be an error if they're not unique within the source file. For instance a default lambda macro may choose to qualify parameters with the function name, source position, and source file. The module system may choose to qualify imports by content hash to guarantee uniqueness.
+Macros are free to try to create their own qualified names by decorating the reader, but it will be an error if they're not unique within any compilation unit in which they appear. For instance a default lambda macro may choose to qualify parameters with the function name, source position, and source file. The module system may choose to qualify imports by content hash to guarantee uniqueness.
+
+Does this mean that names visible via module exports must be globally unique? i.e. hashed/content addressed? This seems awkward.
 
 Way to parse qualified names? ``calipto.org:builtin:stdin`` ``|file:///home/user/script.cal|:(line 1000):x``.
 
@@ -44,14 +46,33 @@ Defines do not have to appear at the root of a source file, they can be nested w
 The a defined value is not fully resolved until it is used, and is permitted to mention unbound symbols. But these symbols must all be defined before the value is used. This allows for mutual recursion::
 
   (define even? (lambda (x)
-    (eq x 0
-      true
-      (not (odd? (dec x))))))
+    (or (= 0 x)
+        (not (odd? (dec x))))))
 
   (define odd? (lambda (x)
-    (not (even? (dec x)))))
+    (and (not (= 0 x))
+         (not (even? (dec x))))))
 
   (even? 10)
   ; true
 
-In cases of recursion, an extra parameter must be injected into each participating function for every function which it recurs into, including itself.
+In cases of recursion, an extra parameter must be injected into each participating function for every function which it recurs into, including itself. This allows us to translate to an equivalent form with no forward references::
+
+  (define even?-r (lambda (even? odd? x)
+    (or (= 0 x)
+        (not (odd? even? odd? (dec x))))))
+
+  (define odd?-r (lambda (even? odd? x)
+    (and (not (= 0 x))
+         (not (even? even? odd? (dec x)))))
+
+  (define even? (lambda (x)
+    (even?-r even?-r odd?-r x)))
+  
+  (define odd? (lambda (x)
+    (odd?-r even?-r odd?-r x)))
+
+Let
+---
+
+(let
