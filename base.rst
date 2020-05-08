@@ -60,9 +60,9 @@ IO is inherently stateful and side effecting, so how do we model that with an AP
 
 But there is already way to achieve functional side effects in CPS which is perfectly natural, and it does not require any complex static type checking or new programming abstractions. Every time a side-effecting builtin function is called, it remembers the arguments it received and its result, then when it is called again it can give the same results for the same arguments. When the function returns, it passes a new version of itself to the continuation, which can be used to perform another side effect against the resulting state.
 
-When we have an input function, such as e.g. ``scan-stdin``, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.
+When we have an input function, such as e.g. ``system:in``, the definition is annotated with its index. When we call it it performs the IO and remembers it what was read, then all subsequent calls to the same function have the same result. But then how do we read the next character? Well this is CPS, so when you call the function it passes a new version of itself at the next index to the continuation. This approach can be generalised to many different kinds of input. It automatically provides a kind of buffering, which may be useful or may be a detriment to performance.
 
-When we have an output function, such as e.g. ``print-stdout``, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.
+When we have an output function, such as e.g. ``system:out``, the definition is annotated with its index. When we call it it performs the IO and remembers what was written, then all subsequent calls to the same function will have the same result if the same arguments are given, otherwise they will fail. When called, a new version of the function at the next index is passed to the continuation.
 
 What if clients try to manually materialise a version of one of these functions? If they do so for a state which hasn't been reached yet the system won't know what answers to give them. And if they do so for an old state which has been discarded and cleaned up the system will have forgotten what answers it gave last time.
 
@@ -106,11 +106,11 @@ Special forms are not functions and don't behave as such. This means that they d
 
   https://ericlippert.com/2019/01/31/fixing-random-part-1/
 
-- ``(stdin k)`` Read from std in
-- ``(stdout d k)`` Write to std out
-- ``(stderr d k)`` Write to std error
+- ``(system:in k)`` Read from std in
+- ``(system:out d k)`` Write to std out
+- ``(system:err d k)`` Write to std error
 
-- ``(open-file path k)`` The function ``k`` accepts functions which operate on the file, including one which closes it. ``(open-temp-file k)``
-- ``(env name k)`` Get an environment variable
-- ``(args k)`` Get the program arguments
+- ``(file:open path k)`` The function ``k`` accepts functions which operate on the file, including one which closes it. ``(open-temp-file k)``
+- ``(system:env name k)`` Get an environment variable
+- ``(system:args k)`` Get the program arguments
 
