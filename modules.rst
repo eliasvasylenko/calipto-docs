@@ -63,6 +63,8 @@ There are two ways we could protect a datum from construction; by modifying ``co
 
 To achieve this, every file which is read as a module is injected with a modified version of ``des``, along with the modified version of ``read-symbol`` which protects lookup of certain symbols.
 
+Every atom is self-evaluating.
+
 .. todo::
 
   Every atomic cons cell must be identified by a "marker symbol" in the car position. Should this marker symbol be the same every time (module:atom?). This makes things easier for two reasons;
