@@ -80,6 +80,7 @@
 </pre></div>
 </div>
 <p>To achieve this, every file which is read as a module is injected with a modified version of <code class="docutils literal notranslate"><span class="pre">des</span></code>, along with the modified version of <code class="docutils literal notranslate"><span class="pre">read-symbol</span></code> which protects lookup of certain symbols.</p>
+<p>Every atom is self-evaluating.</p>
 <div class="admonition-todo admonition" id="id1">
 <p class="admonition-title">Todo</p>
 <p>Every atomic cons cell must be identified by a “marker symbol” in the car position. Should this marker symbol be the same every time (module:atom?). This makes things easier for two reasons;</p>
