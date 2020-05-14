@@ -47,6 +47,17 @@
 <div class="section" id="qualified-symbols">
 <h2>Qualified Symbols<a class="headerlink" href="#qualified-symbols" title="Permalink to this headline">¶</a></h2>
 <p>Module names can just be symbols. Probably also a good idea to (optionally?) namespace by organisation / user so as to avoid collisions.</p>
+<p>Same goes for any other kind of name.</p>
+<p>if symbols are normally unqualified, <code class="docutils literal notranslate"><span class="pre">lambda</span></code>, <code class="docutils literal notranslate"><span class="pre">system</span></code>, etc. then how can we protect some qualified names as atoms? Inevitably we must EITHER protect some single unqualified symbol from being used by users, OR make cons partial! These both seem like an undesirable restrictions.</p>
+<p>So it seems we do need qualified symbols … but these don’t appear to be sufficient for our purposes! We want to be able to add extra qualifying context info to a symbol so that e.g. two unrelated and distinct instances of a symbol within a module can be disambiguated.</p>
+<p>Maybe symbols can be qualified any number of times? There can be operators to cons and des symbols, but they don’t have to be total and they only accept names.</p>
+<p>The qualifier is on the left, and can be empty.</p>
+<p>(read-symbol (scan-string “system:in”))
+;&gt; system:in</p>
+<p>(qualify-symbol ‘system ‘in)
+;&gt; system:in</p>
+<p>(qualify-symbol ‘system:stream ‘in)
+;&gt; system:stream:in</p>
 </div>
 <div class="section" id="content-addressing">
 <h2>Content Addressing<a class="headerlink" href="#content-addressing" title="Permalink to this headline">¶</a></h2>

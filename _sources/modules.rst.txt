@@ -24,6 +24,26 @@ Qualified Symbols
 
 Module names can just be symbols. Probably also a good idea to (optionally?) namespace by organisation / user so as to avoid collisions.
 
+Same goes for any other kind of name.
+
+if symbols are normally unqualified, ``lambda``, ``system``, etc. then how can we protect some qualified names as atoms? Inevitably we must EITHER protect some single unqualified symbol from being used by users, OR make cons partial! These both seem like an undesirable restrictions.
+
+So it seems we do need qualified symbols ... but these don't appear to be sufficient for our purposes! We want to be able to add extra qualifying context info to a symbol so that e.g. two unrelated and distinct instances of a symbol within a module can be disambiguated.
+
+Maybe symbols can be qualified any number of times? There can be operators to cons and des symbols, but they don't have to be total and they only accept names.
+
+The qualifier is on the left, and can be empty.
+
+(read-symbol (scan-string "system:in"))
+;> system:in
+
+(qualify-symbol 'system 'in)
+;> system:in
+
+(qualify-symbol 'system:stream 'in)
+;> system:stream:in
+
+
 Content Addressing
 ------------------
 
