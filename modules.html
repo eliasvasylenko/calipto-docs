@@ -51,13 +51,56 @@
 <p>if symbols are normally unqualified, <code class="docutils literal notranslate"><span class="pre">lambda</span></code>, <code class="docutils literal notranslate"><span class="pre">system</span></code>, etc. then how can we protect some qualified names as atoms? Inevitably we must EITHER protect some single unqualified symbol from being used by users, OR make cons partial! These both seem like an undesirable restrictions.</p>
 <p>So it seems we do need qualified symbols … but these don’t appear to be sufficient for our purposes! We want to be able to add extra qualifying context info to a symbol so that e.g. two unrelated and distinct instances of a symbol within a module can be disambiguated.</p>
 <p>Maybe symbols can be qualified any number of times? There can be operators to cons and des symbols, but they don’t have to be total and they only accept names.</p>
-<p>The qualifier is on the left, and can be empty.</p>
-<p>(read-symbol (scan-string “system:in”))
-;&gt; system:in</p>
-<p>(qualify-symbol ‘system ‘in)
-;&gt; system:in</p>
-<p>(qualify-symbol ‘system:stream ‘in)
-;&gt; system:stream:in</p>
+<p>We can manually qualify one symbol with another, producing a new symbol. This function may be partial over some inputs so as to protect authorship of data to trusted sources:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">qualify</span><span class="o">-</span><span class="n">symbol</span> <span class="s1">&#39;a &#39;</span><span class="n">b</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">a</span><span class="p">:</span><span class="n">b</span>
+
+<span class="p">(</span><span class="n">qualify</span><span class="o">-</span><span class="n">symbol</span> <span class="s1">&#39;a &#39;</span><span class="n">b</span><span class="p">:</span><span class="n">c</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">:</span><span class="n">c</span>
+
+<span class="p">(</span><span class="n">qualify</span><span class="o">-</span><span class="n">symbol</span> <span class="s1">&#39;a:b &#39;</span><span class="n">c</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">:</span><span class="n">c</span>
+
+<span class="p">(</span><span class="n">qualify</span><span class="o">-</span><span class="n">symbol</span> <span class="s1">&#39;system &#39;</span><span class="ow">in</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">Failed</span> <span class="n">to</span> <span class="n">qualify</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">insufficient</span> <span class="n">authority</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>We can introspect the name and qualifier of a symbol. These functions are total over all symbols:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">name</span> <span class="s1">&#39;a:b:c)</span>
+<span class="s2">&quot;c&quot;</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;a:b:c)</span>
+<span class="o">&gt;</span> <span class="n">a</span><span class="p">:</span><span class="n">b</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;a:b:c))</span>
+<span class="s2">&quot;b&quot;</span>
+</pre></div>
+</div>
+<p>An unqualified symbol is implicitly qualified with <code class="docutils literal notranslate"><span class="pre">nil</span></code>. The <code class="docutils literal notranslate"><span class="pre">nil</span></code> symbol is itself qualified with <code class="docutils literal notranslate"><span class="pre">nil</span></code>, recursively:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;nil:a)</span>
+<span class="o">&gt;</span> <span class="n">nil</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;a)</span>
+<span class="o">&gt;</span> <span class="n">nil</span>
+
+<span class="p">(</span><span class="n">eq</span> <span class="s1">&#39;a &#39;</span><span class="n">nil</span><span class="p">:</span><span class="n">nil</span><span class="p">:</span><span class="n">nil</span><span class="p">:</span><span class="n">a</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="n">true</span>
+</pre></div>
+</div>
+<p>Alternatively:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;a:b:c)</span>
+<span class="o">&gt;</span> <span class="n">a</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualified</span> <span class="s1">&#39;a:b:c)</span>
+<span class="o">&gt;</span> <span class="n">b</span><span class="p">:</span><span class="n">c</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualified</span> <span class="s1">&#39;a)</span>
+<span class="o">&gt;</span> <span class="n">a</span>
+
+<span class="p">(</span><span class="n">symbol</span><span class="o">-</span><span class="n">qualifier</span> <span class="s1">&#39;a)</span>
+<span class="o">&gt;</span> <span class="n">nil</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="content-addressing">
 <h2>Content Addressing<a class="headerlink" href="#content-addressing" title="Permalink to this headline">¶</a></h2>
@@ -78,20 +121,20 @@
 <span class="p">(</span><span class="n">define</span> <span class="n">a</span> <span class="p">(</span><span class="n">form</span><span class="o">-</span><span class="n">atom</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">)))</span>
 
 <span class="p">(</span><span class="nb">print</span> <span class="n">a</span><span class="p">)</span>
-<span class="p">;</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">atom</span> <span class="n">my</span><span class="o">-</span><span class="n">atoms</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">))</span>
+<span class="o">&gt;</span> <span class="p">(</span><span class="n">atom</span> <span class="n">my</span><span class="o">-</span><span class="n">atoms</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">))</span>
 
 <span class="p">(</span><span class="n">des</span> <span class="n">a</span><span class="p">)</span>
-<span class="p">;</span><span class="o">&gt;</span> <span class="n">error</span><span class="p">,</span> <span class="n">attempt</span> <span class="n">to</span> <span class="n">destruct</span> <span class="n">atom</span>
+<span class="o">&gt;</span> <span class="n">error</span><span class="p">,</span> <span class="n">attempt</span> <span class="n">to</span> <span class="n">destruct</span> <span class="n">atom</span>
 
 <span class="p">(</span><span class="n">cons</span> <span class="n">atom</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">))</span>
-<span class="p">;</span><span class="o">&gt;</span> <span class="n">error</span><span class="p">,</span> <span class="n">unable</span> <span class="n">to</span> <span class="n">read</span> <span class="n">symbol</span> <span class="s1">&#39;atom&#39;</span>
+<span class="o">&gt;</span> <span class="n">error</span><span class="p">,</span> <span class="n">unable</span> <span class="n">to</span> <span class="n">read</span> <span class="n">symbol</span> <span class="s1">&#39;atom&#39;</span>
 
 <span class="p">(</span><span class="nb">print</span> <span class="p">(</span><span class="n">split</span><span class="o">-</span><span class="n">atom</span> <span class="n">a</span><span class="p">))</span>
-<span class="p">;</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">(</span><span class="n">protons</span> <span class="n">neutrons</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To achieve this, every file which is read as a module is injected with a modified version of <code class="docutils literal notranslate"><span class="pre">des</span></code>, along with the modified version of <code class="docutils literal notranslate"><span class="pre">read-symbol</span></code> which protects lookup of certain symbols.</p>
-<p>Every atom is self-evaluating.</p>
+<p>Every atom is self-evaluating?</p>
 <div class="admonition-todo admonition" id="id1">
 <p class="admonition-title">Todo</p>
 <p>Every atomic cons cell must be identified by a “marker symbol” in the car position. Should this marker symbol be the same every time (module:atom?). This makes things easier for two reasons;</p>
@@ -102,6 +145,34 @@
 <p>It would be nice if we could designate any symbol to be an atomic marker, but this would slow down des checking (special casing to put an “atomic” bit on the data could alleviate this, but its nice to have performance <em>without</em> special-casing where possible. It should however be possible to statically eliminate this check in many places so perhaps that is sufficient).</p>
 <p>This would also mean that the module system must ensure that the marker symbol is not exported from a module, and also that it can never escape by being returned from functions, etc. etc. This could be hard, but there are probably tricks to get there by modifying cons etc. to detect changes.</p>
 <p>Alternatively there is a possible middle ground, to say that any symbol in the <code class="docutils literal notranslate"><span class="pre">atom</span></code> namespace is an atomic marker and also inaccessible, e.g. <code class="docutils literal notranslate"><span class="pre">atom:int</span></code>, <code class="docutils literal notranslate"><span class="pre">atom:builtin</span></code>, etc. But do symbols even <em>have</em> namespaces or is a qualified name just another abstraction composed into an atom?</p>
+</div>
+<div class="section" id="leaking-protected-data-via-equality-hash">
+<h3>Leaking Protected Data via Equality/Hash<a class="headerlink" href="#leaking-protected-data-via-equality-hash" title="Permalink to this headline">¶</a></h3>
+<p>Atomics may allow information to be leaked via <code class="docutils literal notranslate"><span class="pre">eq</span></code> and <code class="docutils literal notranslate"><span class="pre">hash</span></code> by default. For instance consider a user atom with a protected password:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(define (make-user name password)
+  `(user (name ,name) (password ,password)))
+</pre></div>
+</div>
+<p>When calling the function from another module, the internal data will be hidden, as we would expect:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">let</span> <span class="n">jane</span> <span class="p">(</span><span class="n">users</span><span class="p">:</span><span class="n">make</span><span class="o">-</span><span class="n">user</span> <span class="s2">&quot;Alex Kid&quot;</span> <span class="s2">&quot;hunter2&quot;</span><span class="p">))</span>
+<span class="n">alex</span>
+<span class="o">&gt;</span> <span class="p">(</span><span class="n">users</span><span class="p">:</span><span class="n">user</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>However, if we pass this datum to untrusted modules they can still brute-force the password of the user if they know the name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">for</span><span class="o">-</span><span class="n">each</span> <span class="n">password</span> <span class="n">password</span><span class="o">-</span><span class="nb">list</span>
+  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="n">eq</span> <span class="p">(</span><span class="n">users</span><span class="p">:</span><span class="n">make</span><span class="o">-</span><span class="n">user</span> <span class="s2">&quot;Alex Kid&quot;</span> <span class="n">password</span><span class="p">)</span> <span class="n">jane</span><span class="p">)</span>
+    <span class="n">password</span>
+    <span class="n">nil</span><span class="p">))</span>
+<span class="o">&gt;</span> <span class="s2">&quot;hunter2&quot;</span>
+</pre></div>
+</div>
+<p>To prevent this, the user datum should include an identity field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(define (make-user name password)
+  `(user (generate-uid) (name ,name) (password ,password)))
+</pre></div>
+</div>
+<p>Alternatively atoms don’t provide any data hiding at all, and sensitive data such as passwords should be hidden in data structures internal to the module, i.e. a table mapping users to passwords.</p>
 </div>
 </div>
 <div class="section" id="previous-notes">

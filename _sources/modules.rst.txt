@@ -32,17 +32,55 @@ So it seems we do need qualified symbols ... but these don't appear to be suffic
 
 Maybe symbols can be qualified any number of times? There can be operators to cons and des symbols, but they don't have to be total and they only accept names.
 
-The qualifier is on the left, and can be empty.
+We can manually qualify one symbol with another, producing a new symbol. This function may be partial over some inputs so as to protect authorship of data to trusted sources::
 
-(read-symbol (scan-string "system:in"))
-;> system:in
+  (qualify-symbol 'a 'b)
+  > a:b
 
-(qualify-symbol 'system 'in)
-;> system:in
+  (qualify-symbol 'a 'b:c)
+  > a:b:c
 
-(qualify-symbol 'system:stream 'in)
-;> system:stream:in
+  (qualify-symbol 'a:b 'c)
+  > a:b:c
 
+  (qualify-symbol 'system 'in)
+  > Failed to qualify symbol, insufficient authority.
+
+We can introspect the name and qualifier of a symbol. These functions are total over all symbols::
+
+  (symbol-name 'a:b:c)
+  "c"
+
+  (symbol-qualifier 'a:b:c)
+  > a:b
+
+  (symbol-name (symbol-qualifier 'a:b:c))
+  "b"
+
+An unqualified symbol is implicitly qualified with ``nil``. The ``nil`` symbol is itself qualified with ``nil``, recursively::
+
+  (symbol-qualifier 'nil:a)
+  > nil
+
+  (symbol-qualifier 'a)
+  > nil
+
+  (eq 'a 'nil:nil:nil:a)
+  > true
+
+Alternatively::
+
+  (symbol-qualifier 'a:b:c)
+  > a
+
+  (symbol-qualified 'a:b:c)
+  > b:c
+
+  (symbol-qualified 'a)
+  > a
+
+  (symbol-qualifier 'a)
+  > nil
 
 Content Addressing
 ------------------
@@ -70,20 +108,20 @@ There are two ways we could protect a datum from construction; by modifying ``co
   (define a (form-atom (protons neutrons)))
 
   (print a)
-  ;> (atom my-atoms (protons neutrons))
+  > (atom my-atoms (protons neutrons))
 
   (des a)
-  ;> error, attempt to destruct atom
+  > error, attempt to destruct atom
 
   (cons atom (protons neutrons))
-  ;> error, unable to read symbol 'atom'
+  > error, unable to read symbol 'atom'
 
   (print (split-atom a))
-  ;> (protons neutrons)
+  > (protons neutrons)
 
 To achieve this, every file which is read as a module is injected with a modified version of ``des``, along with the modified version of ``read-symbol`` which protects lookup of certain symbols.
 
-Every atom is self-evaluating.
+Every atom is self-evaluating?
 
 .. todo::
 
@@ -98,6 +136,35 @@ Every atom is self-evaluating.
   This would also mean that the module system must ensure that the marker symbol is not exported from a module, and also that it can never escape by being returned from functions, etc. etc. This could be hard, but there are probably tricks to get there by modifying cons etc. to detect changes.
 
   Alternatively there is a possible middle ground, to say that any symbol in the ``atom`` namespace is an atomic marker and also inaccessible, e.g. ``atom:int``, ``atom:builtin``, etc. But do symbols even *have* namespaces or is a qualified name just another abstraction composed into an atom?
+
+Leaking Protected Data via Equality/Hash
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Atomics may allow information to be leaked via ``eq`` and ``hash`` by default. For instance consider a user atom with a protected password::
+
+  (define (make-user name password)
+    `(user (name ,name) (password ,password)))
+
+When calling the function from another module, the internal data will be hidden, as we would expect::
+
+  (let jane (users:make-user "Alex Kid" "hunter2"))
+  alex
+  > (users:user ...)
+
+However, if we pass this datum to untrusted modules they can still brute-force the password of the user if they know the name::
+
+  (for-each password password-list
+    (if (eq (users:make-user "Alex Kid" password) jane)
+      password
+      nil))
+  > "hunter2"
+
+To prevent this, the user datum should include an identity field::
+
+  (define (make-user name password)
+    `(user (generate-uid) (name ,name) (password ,password)))
+
+Alternatively atoms don't provide any data hiding at all, and sensitive data such as passwords should be hidden in data structures internal to the module, i.e. a table mapping users to passwords.
 
 Previous Notes
 --------------
