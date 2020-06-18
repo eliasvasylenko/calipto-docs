@@ -12,6 +12,9 @@ Welcome to Calipto's documentation!
    numerics
    sexup
 
+.. warning::
+  This documentation is a work in progress and not a faithful representation of implemented features; parts of it may be incomplete, outdated, or aspirational in nature.
+
 Indices and tables
 ==================
 

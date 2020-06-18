@@ -1,2 +1,2 @@
 # docs
-The documentation and informal specification of the Calipto programming language
+The documentation and informal specification of the Ohvu programming language
