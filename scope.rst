@@ -49,12 +49,15 @@ The a defined value is not fully resolved until it is used, and is permitted to 
     (or (= 0 x)
         (not (odd? (dec x))))))
 
+  ; this would fail to compile!
+  ; (even? 10)
+
   (define odd? (lambda (x)
     (and (not (= 0 x))
          (not (even? (dec x))))))
 
+  ; but this evaluates to true
   (even? 10)
-  ; true
 
 In cases of recursion, an extra parameter must be injected into each participating function for every function which it recurs into, including itself. This allows us to translate to an equivalent form with no forward references::
 
