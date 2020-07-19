@@ -1,19 +1,54 @@
 Base Language
 =============
 
-At its core, Calipto is a very small purely-functional language, with only two primitive data types and a handful of primitive functions. This doesn't make for a very ergonomic programming experience by itself, but don't let that scare you off! Most users will never program directly in the core language and will instead use a number of standard language extensions built on the macro system. That said, the base language is still designed to be human readable and comprehensible, and understanding this design can be a solid foundation upon which to learn the rest of the language.
+At its core, Ohvu is a very small purely-functional language, with only two primitive data types and a handful of primitive functions. This doesn't make for a very ergonomic programming experience by itself, but don't let that scare you off! Ohvu is a language-oriented programming language, and most users will never program directly in the core language and will instead use a number of standard language extensions built on the macro system.
+
+Think of Ohvu itself as in intermediate representation (IR) that happens to be human readable and comprehensible. This is similar to, though at a slightly higher level to, WASM, for instance. The difference is that Ohvu is not simply a compilation target for third party compilers, instead Ohvu source files can load language features as libraries and hook into the compilation process, applying code transformations to themselves as they are loaded.
+
+As an example, all it takes to use Ohvu to process a document according to an s-expression-based markup language ``sexup`` is to prepend the document with a single macro call::
+  #sexup
+
+  (h1 Page Header)
+  (p Opening paragraph.)
 
 Continuation-Passing/Direct Style
 ---------------------------------
 
-Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it's a value of a unit type like void), and expressions can be composed by passing arguments to functions. The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control automatically returning to the caller when a function completes, each function explicitly passes along control by calling another function.
+Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it's a value of a unit type like ``void``), and expressions can be composed by passing arguments to functions.
+
+The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control returning to the caller when a function completes, each function explicitly passes along control by calling another function. This means that a function definition can only contain a single statement.
+
+A simple function in CPS might look pretty complicated::
+
+  (define (distance x y cont)
+    (* x x (lambda (xx)
+      (* y y (lambda (yy)
+        (+ xx yy (lambda (sqr)
+          (sqrt sqr cont))))))))
+
+But using the macro system to load the ``direct`` language feature we can employ the direct style as follows::
+
+  #direct
+  (define (distance x y) (sqrt (+ (* x x) (* y y))))
 
 Primitive Data
 --------------
 
-There are only two fundamental primitive types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.
+There are only two primitive kinds of datum, the "symbol" and the "cell". A symbol is just an association between a name and a unique identity, and in many ways behaves like an interned string. A cell is an ordered pair of data, referred to as its "car" and its "cdr". Every datum is either "unqualified", or "qualified" by a symbol.
 
-It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.
+Because of this simple data model, it is possible to define a notion of equality which is always sound, and which is total over all data. Differences between two data which are equal are simply not observable in the language.
+
+- A symbol is unequal to a cell.
+- Symbols are unequal if they have different names.
+- Data are unequal if one is qualified and the other is unqualified.
+- Data are unequal if their qualifiers are unequal.
+- Cells are unequal if their first cars are unequal, or if their cdrs are unequal.
+
+Other, less strict, notions of equality are often useful and may be defined by users.
+
+
+.. note::
+  All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.
 
 A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with ``:``, though in some circumstances the namespace may be inferred from context in which case the ``:`` should be omitted. Here are some examples of formatted symbols:
 
@@ -39,6 +74,9 @@ This reflects how lists are typically represented in Calipto; the empty list is 
 
 - ``(first second)`` is equivalent to ``(first second . nil)`` is equivalent to ``(first . (second . ()))``, and is a proper list with two elements.
 - ``(first second . terminal)`` is equivalent to ``(first . (second . terminal))``, and is an improper list with two elements.
+
+.. note::
+  It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.
 
 Primitive Functions
 -------------------

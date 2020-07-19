@@ -34,15 +34,48 @@
             
   <div class="section" id="base-language">
 <h1>2. Base Language<a class="headerlink" href="#base-language" title="Permalink to this headline">¶</a></h1>
-<p>At its core, Calipto is a very small purely-functional language, with only two primitive data types and a handful of primitive functions. This doesn’t make for a very ergonomic programming experience by itself, but don’t let that scare you off! Most users will never program directly in the core language and will instead use a number of standard language extensions built on the macro system. That said, the base language is still designed to be human readable and comprehensible, and understanding this design can be a solid foundation upon which to learn the rest of the language.</p>
+<p>At its core, Ohvu is a very small purely-functional language, with only two primitive data types and a handful of primitive functions. This doesn’t make for a very ergonomic programming experience by itself, but don’t let that scare you off! Ohvu is a language-oriented programming language, and most users will never program directly in the core language and will instead use a number of standard language extensions built on the macro system.</p>
+<p>Think of Ohvu itself as in intermediate representation (IR) that happens to be human readable and comprehensible. This is similar to, though at a slightly higher level to, WASM, for instance. The difference is that Ohvu is not simply a compilation target for third party compilers, instead Ohvu source files can load language features as libraries and hook into the compilation process, applying code transformations to themselves as they are loaded.</p>
+<dl>
+<dt>As an example, all it takes to use Ohvu to process a document according to an s-expression-based markup language <code class="docutils literal notranslate"><span class="pre">sexup</span></code> is to prepend the document with a single macro call::</dt><dd><p>#sexup</p>
+<p>(h1 Page Header)
+(p Opening paragraph.)</p>
+</dd>
+</dl>
 <div class="section" id="continuation-passing-direct-style">
 <h2>2.1. Continuation-Passing/Direct Style<a class="headerlink" href="#continuation-passing-direct-style" title="Permalink to this headline">¶</a></h2>
-<p>Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it’s a value of a unit type like void), and expressions can be composed by passing arguments to functions. The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control automatically returning to the caller when a function completes, each function explicitly passes along control by calling another function.</p>
+<p>Most Calipto programs are written in the direct style, as programmers are generally familiar with. That means that every expression and every function returns a value (even if it’s a value of a unit type like <code class="docutils literal notranslate"><span class="pre">void</span></code>), and expressions can be composed by passing arguments to functions.</p>
+<p>The base language, however, is restricted to the continuation-passing style (CPS), in which no functions or expressions resolve to a value. Instead of control returning to the caller when a function completes, each function explicitly passes along control by calling another function. This means that a function definition can only contain a single statement.</p>
+<p>A simple function in CPS might look pretty complicated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">define</span> <span class="p">(</span><span class="n">distance</span> <span class="n">x</span> <span class="n">y</span> <span class="n">cont</span><span class="p">)</span>
+  <span class="p">(</span><span class="o">*</span> <span class="n">x</span> <span class="n">x</span> <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">xx</span><span class="p">)</span>
+    <span class="p">(</span><span class="o">*</span> <span class="n">y</span> <span class="n">y</span> <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span>
+      <span class="p">(</span><span class="o">+</span> <span class="n">xx</span> <span class="n">yy</span> <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">sqr</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">sqrt</span> <span class="n">sqr</span> <span class="n">cont</span><span class="p">))))))))</span>
+</pre></div>
+</div>
+<p>But using the macro system to load the <code class="docutils literal notranslate"><span class="pre">direct</span></code> language feature we can employ the direct style as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#direct</span>
+<span class="p">(</span><span class="n">define</span> <span class="p">(</span><span class="n">distance</span> <span class="n">x</span> <span class="n">y</span><span class="p">)</span> <span class="p">(</span><span class="n">sqrt</span> <span class="p">(</span><span class="o">+</span> <span class="p">(</span><span class="o">*</span> <span class="n">x</span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span> <span class="n">y</span> <span class="n">y</span><span class="p">))))</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="primitive-data">
 <h2>2.2. Primitive Data<a class="headerlink" href="#primitive-data" title="Permalink to this headline">¶</a></h2>
-<p>There are only two fundamental primitive types of datum, the symbol and the cons cell. All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
-<p>It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.</p>
+<p>There are only two primitive kinds of datum, the “symbol” and the “cell”. A symbol is just an association between a name and a unique identity, and in many ways behaves like an interned string. A cell is an ordered pair of data, referred to as its “car” and its “cdr”. Every datum is either “unqualified”, or “qualified” by a symbol.</p>
+<p>Because of this simple data model, it is possible to define a notion of equality which is always sound, and which is total over all data. Differences between two data which are equal are simply not observable in the language.</p>
+<ul class="simple">
+<li><p>A symbol is unequal to a cell.</p></li>
+<li><p>Symbols are unequal if they have different names.</p></li>
+<li><p>Data are unequal if one is qualified and the other is unqualified.</p></li>
+<li><p>Data are unequal if their qualifiers are unequal.</p></li>
+<li><p>Cells are unequal if their first cars are unequal, or if their cdrs are unequal.</p></li>
+</ul>
+<p>Other, less strict, notions of equality are often useful and may be defined by users.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All data is immutable with no exceptions, though constrained forms of mutability can easily be simulated with macros, for instance using the effect system.</p>
+</div>
 <p>A symbol is a namespace-qualified name. They are typically formatted with the namespace before the name, separated with <code class="docutils literal notranslate"><span class="pre">:</span></code>, though in some circumstances the namespace may be inferred from context in which case the <code class="docutils literal notranslate"><span class="pre">:</span></code> should be omitted. Here are some examples of formatted symbols:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">bool:true</span></code></p></li>
@@ -67,6 +100,10 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">second)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">second</span> <span class="pre">.</span> <span class="pre">nil)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">.</span> <span class="pre">(second</span> <span class="pre">.</span> <span class="pre">()))</span></code>, and is a proper list with two elements.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">second</span> <span class="pre">.</span> <span class="pre">terminal)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">(first</span> <span class="pre">.</span> <span class="pre">(second</span> <span class="pre">.</span> <span class="pre">terminal))</span></code>, and is an improper list with two elements.</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It may seem like a performance concern that there are no built in types for numerics, lists, maps, or other data structures, but this is not the case. Runtimes are required to know how to lay out important data structures efficiently in memory, and should provide intrinsics for functions which operate on them.</p>
+</div>
 </div>
 <div class="section" id="primitive-functions">
 <h2>2.3. Primitive Functions<a class="headerlink" href="#primitive-functions" title="Permalink to this headline">¶</a></h2>
